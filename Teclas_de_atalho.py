@@ -1,0 +1,708 @@
+import tkinter as tk
+from tkinter import Toplevel, Label, Button, Frame, messagebox ,ttk
+import customtkinter as ctk
+from datetime import datetime
+from tkinter import simpledialog
+import os
+from reportlab.lib.pagesizes import landscape, letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer
+from reportlab.platypus import Paragraph
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+import sqlite3
+
+# teclas_de_atalho.py
+class TeclasDeAtalho:
+    def __init__(self, janela, tela_usuario):
+        self.janela = janela
+        self.tela_usuario = tela_usuario
+        # Associa as teclas de função às funções correspondentes
+        self.janela.bind("<F1>", self.acao_f1)
+        self.janela.bind("<F2>", self.acao_f2)
+        self.janela.bind("<F3>", self.acao_f3)
+        self.janela.bind("<F4>", self.acao_f4)
+        self.janela.bind("<F5>", self.acao_f5)
+        self.janela.bind("<F6>", self.acao_f6)
+        self.janela.bind("<Delete>", self.acao_del)
+        self.treeview_relatorio = None
+        self.frame_filtros = None
+        self.frame_treeview = None
+        self.title_text = ""
+
+    def acao_f1(self, event):
+        # Implemente aqui a ação desejada para a tecla F1
+        self.abrir_janela_pesquisa()
+    
+    def acao_f2(self, event):
+        # Implemente aqui a ação desejada para a tecla F3
+        self.realizar_pagamento_dinheiro()
+
+    def acao_f3(self, event):
+        # Implemente aqui a ação desejada para a tecla F3
+        self.realizar_pagamento_cartao()
+
+    def acao_f4(self, event):
+        # Implemente aqui a ação desejada para a tecla F3
+        self.realizar_pagamento_pix()
+
+    def acao_f5(self, event):
+        # Implemente aqui a ação desejada para a tecla F5
+        self.abrir_janela_cadastro_produtos()
+
+    def acao_f6(self, event):
+        self.relatorio_venda()
+
+    def acao_del(self, event):
+        # Implemente aqui a ação desejada para a tecla F2
+        self.remover_produto_selecionado()
+
+    def abrir_janela_pesquisa(self):
+        self.executar_funcao_pesquisar()
+
+ # CONSULTAR PRODUTOS CADASTRADOS, SELECIONAR O PRODUTO PARA VENDA. AÇÃO DO F1
+    @classmethod
+    def consultar_produtos(cls):
+        conn = sqlite3.connect("SistemaPDV.db")
+        cursor = conn.cursor()
+        # Fazer a consulta para obter todos os produtos
+        cursor.execute("SELECT codigo_interno, descricao, estoque, preco_venda FROM produtos")
+        produtos = cursor.fetchall()
+        conn.close()
+        return produtos
+
+    def executar_funcao_pesquisar(self):
+        # Criar o TopLevel usando a instância da janela principal
+        self.top_pesquisar = Toplevel(self.janela)
+        self.top_pesquisar.title("Produtos")
+
+        # Adicionar um frame ao TopLevel para conter os campos desejados
+        frame_pesquisar = Frame(self.top_pesquisar, bg="white")
+        frame_pesquisar.pack(padx=10, pady=10)
+
+        # Adicionar os campos, botões e Treeview ao frame_quantidade
+        label_pesquisar = Label(frame_pesquisar, text="Pesquisar produto", font="Roboto 14", anchor="center", background="white")
+        label_pesquisar.grid(row=0, column=0, sticky="nsew", padx=20)
+
+        # Criar um botão para adicionar o código do produto no entry da TelaUsuario
+        btn_adicionar = Button(frame_pesquisar, text="Adicionar", font="Roboto 12", height=2, fg="white", background="blue" ,command=self.adicionar_codigo_produto)
+        btn_adicionar.grid(row=1, column=0, padx=20, pady=10, sticky="nsew")
+
+        # Criar uma Treeview para exibir os produtos do banco de dados
+        # Criar uma Treeview para exibir os produtos do banco de dados
+        self.treeview_produtos = ttk.Treeview(frame_pesquisar, height=10, columns=("cod_produto", "descricao", "quantidade", "vlr_unitario"), show="headings")
+        self.treeview_produtos.heading("cod_produto", text="Cód. Produto")
+        self.treeview_produtos.heading("descricao", text="Descrição")
+        self.treeview_produtos.heading("quantidade", text="Qtdade.")
+        self.treeview_produtos.heading("vlr_unitario", text="Vlr. Unitário")
+
+        self.treeview_produtos.column("cod_produto", width=100, anchor="center", stretch=False)
+        self.treeview_produtos.column("descricao", width=230, anchor="w", stretch=False)
+        self.treeview_produtos.column("quantidade", width=100, anchor="center", stretch=False)
+        self.treeview_produtos.column("vlr_unitario", width=100, anchor="center", stretch=False)
+        self.treeview_produtos.grid(row=2, column=0, padx=20, pady=10)
+
+        # Preencher a Treeview com os produtos do banco de dados
+        produtos = TeclasDeAtalho.consultar_produtos()
+        for produto in produtos:
+            self.treeview_produtos.insert("", "end", values=(produto))
+
+        # Adicionar eventos de seleção na Treeview para capturar o código do produto
+        self.treeview_produtos.bind("<Double-1>", self.selecionar_produto)
+
+        # Centralizar a janela no centro da tela
+        self.centralizar_janela(self.top_pesquisar)
+
+    def centralizar_janela(self, window):
+        # Atualiza o layout da janela para garantir dimensões corretas
+        window.update_idletasks()
+
+        # Obtém a largura e a altura da janela
+        window_width = window.winfo_width()
+        window_height = window.winfo_height()
+
+        # Obtém a largura e a altura da tela
+        screen_width = window.winfo_screenwidth()
+        screen_height = window.winfo_screenheight()
+
+        # Calcula as coordenadas x e y para centralizar a janela
+        x = (screen_width - window_width) // 2
+        y = (screen_height - window_height) // 2
+
+        # Define a posição da janela no centro da tela
+        window.geometry("+{}+{}".format(x, y))
+
+    def selecionar_produto(self, event):
+        # Obter o item selecionado na Treeview
+        item_selecionado = self.treeview_produtos.selection()
+        
+        if item_selecionado:
+            # Obter os valores das colunas do item selecionado
+            cod_produto = self.treeview_produtos.item(item_selecionado, "values")[0]
+
+            # Atualizar o código do produto no entry da TelaUsuario
+            self.tela_usuario.selecionar_produto(cod_produto)
+
+    def adicionar_codigo_produto(self):
+        # Obter o código do produto selecionado na Treeview
+        item_selecionado = self.treeview_produtos.focus()
+        if item_selecionado:
+            cod_produto = self.treeview_produtos.item(item_selecionado, "values")[0]
+            # Atualizar o código do produto no entry da TelaUsuario
+            self.tela_usuario.atualizar_codigo_produto(cod_produto)
+        # Fechar o TopLevel após adicionar o código do produto
+            self.top_pesquisar.destroy()
+
+# FUNÇÃO PARA CANCELAR UM PRODUTO SELECIONADO PARA VENDA. AÇÃO DO F2
+    def executar_funcao_cancelar_produto(self):
+        self.remover_produto_selecionado()
+
+    def remover_produto_selecionado(self):
+        # Obter o item selecionado na Treeview
+        item_selecionado = self.tela_usuario.treeview_produtos.selection()
+        if item_selecionado:
+            # Obter a descrição do item selecionado antes da remoção
+            descricao_removida = self.tela_usuario.treeview_produtos.item(item_selecionado, "values")[1]
+
+            # Remover o produto da Treeview
+            self.tela_usuario.treeview_produtos.delete(item_selecionado)
+
+            # Atualizar a descrição do produto na label
+            items = self.tela_usuario.treeview_produtos.get_children()
+            if items:
+                ultimo_item = items[-1]
+                descricao_ultimo_item = self.tela_usuario.treeview_produtos.item(ultimo_item, "values")[1]
+                self.tela_usuario.label_descricao_produto["text"] = f"{descricao_ultimo_item}"
+            else:
+                # Caso não tenha mais itens na Treeview, limpar a label
+                self.tela_usuario.label_descricao_produto["text"] = ""
+            
+            # Limpar a imagem do produto no frame_imagem
+            self.limpar_imagem() # PRECISAMOS RESOLVER O PROBLEMA DE REMOVER A IMAGEM SOMENTE DO ITEM EXCLUIDO.
+
+            # Recalcular e atualizar os valores
+            self.tela_usuario.calcular_valores()
+            
+    def limpar_imagem(self):
+        # Remove a imagem do label_imagem
+        if self.tela_usuario.label_imagem_prod is not None:
+            self.tela_usuario.label_imagem_prod.pack_forget()
+            self.tela_usuario.label_imagem_prod = None
+
+# FUNÇÃO PARA PAGAMENTO, FINALIZAR O PAGAMENTO E LANÇAR NO RELATÓRIO.
+    def realizar_pagamento_dinheiro(self):
+        total_compra, produtos_quantidades = self.tela_usuario.calcular_total_compra()
+
+        data_hora_atual = datetime.now()
+        valor_pago = simpledialog.askfloat("Pagamento em Dinheiro", f"Total da Compra: R$ {total_compra:.2f}\nDigite o valor pago em dinheiro:")
+
+        if valor_pago is not None:
+            troco = valor_pago - total_compra
+            messagebox.showinfo("Troco", f"Troco: R$ {troco:.2f}")
+
+            for nome_produto, quantidade_vendida in produtos_quantidades:
+                self.registrar_pagamento_no_relatorio(data_hora_atual, nome_produto ,total_compra, quantidade_vendida ,"Dinheiro", valor_pago, troco)
+            self.limpar_tela_apos_pagamento()
+
+            # Conectar ao banco de dados
+            conn = sqlite3.connect("SistemaPDV.db")
+            cursor = conn.cursor()
+
+            # Atualizar o estoque para cada produto vendido
+            for produto, quantidade_vendida in produtos_quantidades:
+                # Verificar a quantidade atual no estoque
+                cursor.execute("SELECT estoque FROM produtos WHERE descricao = ?", (produto,))
+                resultado = cursor.fetchone()
+
+                if resultado is not None:
+                    quantidade_atual = resultado[0]
+                    nova_quantidade = quantidade_atual - quantidade_vendida
+
+                    # Atualizar o estoque no banco de dados
+                    cursor.execute("UPDATE produtos SET estoque = ? WHERE descricao = ?", (nova_quantidade, produto))
+            # Salvar as alterações e fechar a conexão com o banco de dados
+            conn.commit()
+            conn.close()
+        else:
+            messagebox.showinfo("Cancelado", f"Total da Compra: R$ {total_compra:.2f} com dinheiro cancelado")
+            self.limpar_tela_apos_pagamento()
+
+    def realizar_pagamento_cartao(self):
+        total_compra, produtos_quantidades = self.tela_usuario.calcular_total_compra()
+        data_hora_atual = datetime.now()
+        confirmar_pag = messagebox.askyesno("Pagamento com Cartão", f"Pagamento de R$ {total_compra:.2f} feito com cartão.")
+
+        if confirmar_pag:
+            for nome_produto, quantidade_vendida in produtos_quantidades:
+                self.registrar_pagamento_no_relatorio(data_hora_atual, nome_produto ,total_compra, quantidade_vendida ,"Cartão", total_compra, 0)
+            self.limpar_tela_apos_pagamento()
+
+            # Conectar ao banco de dados
+            conn = sqlite3.connect("SistemaPDV.db")
+            cursor = conn.cursor()
+
+            # Atualizar o estoque para cada produto vendido
+            for produto, quantidade_vendida in produtos_quantidades:
+                # Verificar a quantidade atual no estoque
+                cursor.execute("SELECT estoque FROM produtos WHERE descricao = ?", (produto,))
+                resultado = cursor.fetchone()
+
+                if resultado is not None:
+                    quantidade_atual = resultado[0]
+                    nova_quantidade = quantidade_atual - quantidade_vendida
+
+                    # Atualizar o estoque no banco de dados
+                    cursor.execute("UPDATE produtos SET estoque = ? WHERE descricao = ?", (nova_quantidade, produto))
+            # Salvar as alterações e fechar a conexão com o banco de dados
+            conn.commit()
+            conn.close()
+
+        else:
+            messagebox.showinfo("Cancelado", f"Pagamento de R$ {total_compra:.2f} com cartão cancelado.")
+            self.limpar_tela_apos_pagamento()
+
+    def realizar_pagamento_pix(self):
+        total_compra, produtos_quantidades = self.tela_usuario.calcular_total_compra()
+        data_hora_atual = datetime.now()
+        confirmar_pag = messagebox.askyesno("Pagamento com PIX", f"Pagamento de R$ {total_compra:.2f} feito com PIX.")
+
+        if confirmar_pag:
+            for nome_produto, quantidade_vendida in produtos_quantidades:
+                self.registrar_pagamento_no_relatorio(data_hora_atual, nome_produto ,total_compra, quantidade_vendida ,"PIX", total_compra, 0)
+            self.limpar_tela_apos_pagamento()
+
+            # Conectar ao banco de dados
+            conn = sqlite3.connect("SistemaPDV.db")
+            cursor = conn.cursor()
+
+            # Atualizar o estoque para cada produto vendido
+            for produto, quantidade_vendida in produtos_quantidades:
+                # Verificar a quantidade atual no estoque
+                cursor.execute("SELECT estoque FROM produtos WHERE descricao = ?", (produto,))
+                resultado = cursor.fetchone()
+
+                if resultado is not None:
+                    quantidade_atual = resultado[0]
+                    nova_quantidade = quantidade_atual - quantidade_vendida
+
+                    # Atualizar o estoque no banco de dados
+                    cursor.execute("UPDATE produtos SET estoque = ? WHERE descricao = ?", (nova_quantidade, produto))
+            # Salvar as alterações e fechar a conexão com o banco de dados
+            conn.commit()
+            conn.close()
+
+        else:
+            messagebox.showinfo("Cancelado", f"Pagamento de R$ {total_compra:.2f} com PIX cancelado.")
+            self.limpar_tela_apos_pagamento()
+
+    def registrar_pagamento_no_relatorio(self, data_hora_atual, nome_produto ,total_compra, quantidade_vendida ,forma_pagamento, valor_pago, troco):
+        # Implementar a lógica para registrar o pagamento no relatório ou banco de dados
+        # Obter a data e hora atual do sistema
+        data_hora_atual = datetime.now()
+        # Conectar ao banco de dados
+        conn = sqlite3.connect("SistemaPDV.db")
+        cursor = conn.cursor()
+         # Inserir os dados na tabela "relatorios_vendas"
+        cursor.execute('''
+            INSERT INTO relatorios_vendas (data, nome_produto ,total_compra, quantidade_vendida ,forma_pagamento, valor_pago, troco)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (data_hora_atual, nome_produto ,total_compra, quantidade_vendida ,forma_pagamento, valor_pago, troco))
+        # Salvar as alterações e fechar a conexão com o banco de dados
+        conn.commit()
+        conn.close()
+
+    def limpar_tela_apos_pagamento(self):
+        # Implementar a lógica para limpar a tela após o pagamento
+        self.tela_usuario.treeview_produtos.delete(*self.tela_usuario.treeview_produtos.get_children())
+        self.tela_usuario.label_total_itens.config(text="TOTAL ITENS: 0")
+        self.tela_usuario.label_total_compra.config(text="TOT. COMPRA: R$ 0.00")
+        self.tela_usuario.label_descricao_produto.config(text="")
+        self.limpar_imagem()
+        self.tela_usuario.calcular_valores()
+
+# CRIAR UMA JANELA PARA CADASTRO DE PRODUTOS, CÓDIGO INSERIDO NA TelaUsuario E CHAMADA DA FUNÇÃO AQUI.
+    def abrir_janela_cadastro_produtos(self):
+        # Chamar o método criar_frame_cadastro da instância de TelaUsuario
+        self.tela_usuario.criar_frame_cadastro()
+
+# CRIAR UMA JANELA PARA RELATÓRIO DE VENDAS
+    def relatorio_venda(self):
+        self.janela_relatorio = tk.Toplevel()
+        self.janela_relatorio.title("Relatório de Vendas")
+
+        # Defina o tamanho da janela para preencher toda a tela
+        largura_tela = self.janela_relatorio.winfo_screenwidth()
+        altura_tela = self.janela_relatorio.winfo_screenheight()
+        self.janela_relatorio.geometry(f"{largura_tela}x{altura_tela}")
+
+        # Defina a proporção de expansão das linhas
+        self.janela_relatorio.grid_rowconfigure(0, weight=1)  # Frame_left ocupa 100% da altura
+        # Defina a proporção de expansão das colunas
+        self.janela_relatorio.grid_columnconfigure(1, weight=1)  # Frame_right ocupa 100% da largura
+
+        # Crie um frame na parte esquerda da janela que preencha toda a altura
+        frame_left = tk.Frame(self.janela_relatorio, bg="#202123")
+        frame_left.grid(row=0, column=0, sticky="ns")
+
+        # Crie o frame da direita que irá conter o frame de filtros e a treeview
+        self.frame_right = tk.Frame(self.janela_relatorio, bg="white")
+        self.frame_right.grid(row=0, column=1,columnspan=4 ,sticky="nsew")
+
+        # Defina a proporção de expansão das colunas
+        self.frame_right.grid_columnconfigure(1, weight=1)  # Frame_right ocupa 100% da largura
+
+        # Crie o frame da treeview
+        self.frame_treeview = tk.Frame(self.frame_right)
+        self.frame_treeview.grid(row=1, column=0, columnspan=4, padx=10, pady=10, sticky="nsew")
+
+        # Adicione os botões de filtro dentro do frame_left
+        btn_filtro_dia = ctk.CTkButton(frame_left, text="Vendas do Dia", height=45, hover_color="blue", font=ctk.CTkFont(family="Roboto", size=20), text_color="white", bg_color="#252525", corner_radius=None, command=self.filtrar_vendas_dia)
+        btn_filtro_semana = ctk.CTkButton(frame_left, text="Vendas da Semana", height=45, hover_color="blue", font=ctk.CTkFont(family="Roboto", size=20), text_color="white", bg_color="#252525", corner_radius=None, command=self.filtrar_vendas_semana)
+        btn_filtro_mes = ctk.CTkButton(frame_left, text="Vendas do Mês", height=45, hover_color="blue", font=ctk.CTkFont(family="Roboto", size=20), text_color="white", bg_color="#252525", corner_radius=None, command=self.filtrar_vendas_mes)
+        btn_mostrar_todos = ctk.CTkButton(frame_left, text="Mostrar Todos", height=45, hover_color="blue", font=ctk.CTkFont(family="Roboto", size=20), text_color="white", bg_color="#252525", corner_radius=None, command=self.filtrar_todos_os_dados)
+        btn_sair_relatorio = ctk.CTkButton(frame_left, text="Sair", height=45, hover_color="blue", font=ctk.CTkFont(family="Roboto", size=20), text_color="white", bg_color="#252525", corner_radius=None, command=self.sair_tela_relatorio)
+
+        btn_filtro_dia.grid(row=0, padx=1, pady=5, sticky="ew")
+        btn_filtro_semana.grid(row=1, padx=1, pady=5, sticky="ew")
+        btn_filtro_mes.grid(row=2, padx=1, pady=5, sticky="ew")
+        btn_mostrar_todos.grid(row=3, padx=1, pady=5, sticky="ew")
+        btn_sair_relatorio.grid(row=4, padx=1, pady=5, sticky="ew")
+        # Adicione um Label vazio para preencher toda a altura do frame
+        empty_label = tk.Label(frame_left, bg="#202123")
+        empty_label.grid(row=5, column=0, sticky="ns")
+
+    def criar_frame_filtros(self):
+        # Limpa o frame de filtros, se já existir
+        if self.frame_filtros is not None:
+            self.frame_filtros.destroy()
+
+        # Crie o frame de filtros
+        self.frame_filtros = tk.Frame(self.frame_right, background="white")
+        self.frame_filtros.grid(row=0, column=0, columnspan=4, padx=10, pady=10, sticky="ew")
+
+    def criar_treeview(self):
+        # Cria uma única instância da treeview apenas se ela ainda não foi criada
+        if self.treeview_relatorio is None:
+            self.treeview_relatorio = ttk.Treeview(self.frame_treeview, height=20, columns=("data", "nome_produto" ,"total_compra", "quantidade_vendida" ,"forma_pagamento", "valor_pago", "troco"))
+            self.treeview_relatorio.heading("data", text="Data")
+            self.treeview_relatorio.heading("nome_produto", text="Descrição")
+            self.treeview_relatorio.heading("total_compra", text="Total da Compra")
+            self.treeview_relatorio.heading("quantidade_vendida", text="Quantidade vendida")
+            self.treeview_relatorio.heading("forma_pagamento", text="Forma de Pagamento")
+            self.treeview_relatorio.heading("valor_pago", text="Valor Pago")
+            self.treeview_relatorio.heading("troco", text="Troco")
+
+            # Defina um tamanho mínimo para as colunas e remova o espaço vazio no início
+            self.treeview_relatorio.column("#0", width=0, stretch=tk.NO)
+            self.treeview_relatorio.column("data", width=100, anchor="center", minwidth=100)
+            self.treeview_relatorio.column("nome_produto", width=150, anchor="center", minwidth=100)
+            self.treeview_relatorio.column("total_compra", width=150, anchor="center", minwidth=100)
+            self.treeview_relatorio.column("quantidade_vendida", width=100, anchor="center", minwidth=100)
+            self.treeview_relatorio.column("forma_pagamento", width=200, anchor="center", minwidth=100)
+            self.treeview_relatorio.column("valor_pago", width=150, anchor="center", minwidth=100)
+            self.treeview_relatorio.column("troco", width=150, anchor="center", minwidth=100)
+
+            self.treeview_relatorio.pack(fill="both", expand=True)
+        else:
+            # Se a treeview já existe, apenas limpe os itens existentes
+            self.treeview_relatorio.delete(*self.treeview_relatorio.get_children())
+
+    def filtrar_vendas_dia(self):
+        # Lógica para filtrar as vendas do dia no banco de dados
+        self.criar_frame_filtros()
+        self.criar_treeview()
+
+        # Crie os elementos de filtro (label, entry e botão) dentro do frame_filtros
+        self.lb_dia = ctk.CTkLabel(self.frame_filtros, text="DIA INICIO:", font=ctk.CTkFont(family="Roboto", size=25))
+        self.lb_dia.grid(row=0, column=0, padx=15, pady=15, sticky="e")
+
+        self.enty_dia = ctk.CTkEntry(self.frame_filtros, placeholder_text="EX 01-01-2023", width=300, height=45, font=ctk.CTkFont(family="Roboto", size=18), text_color="black", bg_color="#252525", corner_radius=None)
+        self.enty_dia.grid(row=0, column=1, padx=5, pady=15, sticky="w")
+
+        self.btn_pesquisar = ctk.CTkButton(self.frame_filtros, text="Pesquisar", width=150, height=45, hover_color="blue", font=ctk.CTkFont(family="Roboto", size=20), text_color="white", bg_color="#252525", corner_radius=1, command=self.pesquisar_rela_dia)
+        self.btn_pesquisar.grid(row=0, column=2, padx=5, pady=15, sticky="e")
+
+        btn_imprimir = ctk.CTkButton(self.frame_filtros, text="Imprimir", width=120, height=45, hover_color="blue", font=ctk.CTkFont(family="Roboto", size=20), text_color="white", bg_color="#252525", corner_radius=None, command=self.imprimir_rela_dia)
+        btn_imprimir.grid(row=0, column=3, padx=5, pady=15, sticky="w")
+
+    def filtrar_vendas_semana(self):
+        # Lógica para filtrar as vendas da semana no banco de dados
+        self.criar_frame_filtros()
+        self.criar_treeview()
+
+        # Adicione no frame os elementos de filtro (label, entry e botão)
+        self.lb_dia_ini_sem = ctk.CTkLabel(self.frame_filtros, text="DIA INICIO: ", font=ctk.CTkFont(family="Roboto", size=25))
+        self.lb_dia_ini_sem.grid(row=0, column=0, padx=15, pady=15)
+
+        self.enty_dia_ini_sem = ctk.CTkEntry(self.frame_filtros, placeholder_text="EX 01-01-2023", width=200, height=45, font=ctk.CTkFont(family="Roboto", size=18), text_color="black", bg_color="#252525", corner_radius=1)
+        self.enty_dia_ini_sem.grid(row=0, column=1, padx=15, pady=15)
+
+        self.lb_dia_fim_sem = ctk.CTkLabel(self.frame_filtros, text="DIA FINAL: ", font=ctk.CTkFont(family="Roboto", size=25))
+        self.lb_dia_fim_sem.grid(row=0, column=2, padx=15, pady=15)
+
+        self.enty_dia_fim_sem = ctk.CTkEntry(self.frame_filtros, placeholder_text="EX 07-01-2023", width=200, height=45, font=ctk.CTkFont(family="Roboto", size=18), text_color="black", bg_color="#252525", corner_radius=1)
+        self.enty_dia_fim_sem.grid(row=0, column=3, padx=15, pady=15)
+
+        self.btn_pesquisar_sem = ctk.CTkButton(self.frame_filtros, text="Pesquisar", width=150, height=45, hover_color="blue", font=ctk.CTkFont(family="Roboto", size=20), text_color="white" ,bg_color="#252525", corner_radius=None, command=self.pesquisar_rela_semana)
+        self.btn_pesquisar_sem.grid(row=0, column=4, padx=10, pady=15)
+
+        btn_imprimir = ctk.CTkButton(self.frame_filtros, text="Imprimir", width=120, height=45, hover_color="blue", font=ctk.CTkFont(family="Roboto", size=20), text_color="white", bg_color="#252525", corner_radius=None, command=self.imprimir_rela_sem)
+        btn_imprimir.grid(row=0, column=5, padx=10, pady=15)
+
+    def filtrar_vendas_mes(self):
+        # Lógica para filtrar as vendas da semana no banco de dados
+        self.criar_frame_filtros()
+        self.criar_treeview()
+
+        # Adicione no frame os elementos de filtro (label, entry e botão)
+        self.lb_dia_ini_mes = ctk.CTkLabel(self.frame_filtros, text="DIA INICIO: ", font=ctk.CTkFont(family="Roboto", size=25))
+        self.lb_dia_ini_mes.grid(row=0, column=0, padx=15, pady=15)
+
+        self.enty_dia_ini_mes = ctk.CTkEntry(self.frame_filtros, placeholder_text="EX 01-01-2023", width=200, height=45, font=ctk.CTkFont(family="Roboto", size=18), text_color="black", bg_color="#252525", corner_radius=1)
+        self.enty_dia_ini_mes.grid(row=0, column=1, padx=15, pady=15)
+
+        self.lb_dia_fim_mes = ctk.CTkLabel(self.frame_filtros, text="DIA FINAL: ", font=ctk.CTkFont(family="Roboto", size=25))
+        self.lb_dia_fim_mes.grid(row=0, column=2, padx=15, pady=15)
+
+        self.enty_dia_fim_mes = ctk.CTkEntry(self.frame_filtros, placeholder_text="EX 01-02-2023", width=200, height=45, font=ctk.CTkFont(family="Roboto", size=18), text_color="black", bg_color="#252525", corner_radius=None)
+        self.enty_dia_fim_mes.grid(row=0, column=3, padx=15, pady=15)
+
+        self.btn_pesquisar_mes = ctk.CTkButton(self.frame_filtros, text="Pesquisar", width=150, height=45, hover_color="blue", font=ctk.CTkFont(family="Roboto", size=20), text_color="white" ,bg_color="#252525", corner_radius=None, command=self.pesquisar_rela_mes)
+        self.btn_pesquisar_mes.grid(row=0, column=4, padx=10, pady=15)
+
+        btn_imprimir = ctk.CTkButton(self.frame_filtros, text="Imprimir", width=120, height=45, hover_color="blue", font=ctk.CTkFont(family="Roboto", size=20), text_color="white", bg_color="#252525", corner_radius=None, command=self.imprimir_rela_mes)
+        btn_imprimir.grid(row=0, column=5, padx=10, pady=15)
+
+    def filtrar_todos_os_dados(self):
+        # Lógica para mostrar todos os dados do relatório no banco de dados
+        self.criar_frame_filtros()
+        self.criar_treeview()
+
+        # Crie os elementos de filtro (label, entry e botão) dentro do frame_filtros
+        lb_title = ctk.CTkLabel(self.frame_filtros, text="RELATÓRIO DE TODAS AS VENDAS", font=ctk.CTkFont(family="Roboto", size=25), anchor="center", bg_color="white")
+        lb_title.grid(row=0, column=0, columnspan=3 ,padx=50, pady=15)
+
+        btn_imprimir = ctk.CTkButton(self.frame_filtros, text="Imprimir", width=120, height=45, hover_color="blue", font=ctk.CTkFont(family="Roboto", size=20), text_color="white", bg_color="#252525", corner_radius=1, command=self.imprimir_rela_todos)
+        btn_imprimir.grid(row=0, column=3, padx=10, pady=15)
+
+        # Conectar ao banco de dados
+        conn = sqlite3.connect("SistemaPDV.db")
+        cursor = conn.cursor()
+
+        # Lógica para filtrar todas as vendas do banco de dados
+        cursor.execute("SELECT data, nome_produto ,total_compra, quantidade_vendida ,forma_pagamento, valor_pago, troco FROM relatorios_vendas")
+        dados_relatorio = cursor.fetchall()
+
+        if dados_relatorio:  # Verifica se a lista de dados não está vazia
+            # Preencher a Treeview com os dados do relatório de vendas
+            for dado in dados_relatorio:
+                self.treeview_relatorio.insert("", "end", values=dado)
+            # Fechar a conexão com o banco de dados
+            conn.close()
+        else:
+            messagebox.showerror("Error", "Não existe dados no banco de dados!")
+
+    def sair_tela_relatorio(self):
+        self.janela_relatorio.destroy()
+
+    def pesquisar_rela_dia(self):
+        # Conectar ao banco de dados
+        conn = sqlite3.connect("SistemaPDV.db")
+        cursor = conn.cursor()
+
+        receber_enty_dia = self.enty_dia.get()
+        # Usando slicing para obter dia, mês e ano
+        dia = receber_enty_dia[0:2]
+        mes = receber_enty_dia[3:5]
+        ano = receber_enty_dia[6:11]
+        palavra_invertida = f"{ano}-{mes}-{dia}"
+
+        # Lógica para filtrar as vendas do dia no banco de dados
+        cursor.execute("SELECT data, nome_produto ,total_compra, quantidade_vendida ,forma_pagamento, valor_pago, troco FROM relatorios_vendas WHERE data LIKE ?", (f"{palavra_invertida}%",))
+        dados_relatorio = cursor.fetchall()
+
+        # Verificar se a data invertida está presente nos resultados da consulta
+        if dados_relatorio:  # Verifica se a lista de dados não está vazia
+            # Preencher a Treeview com os dados do relatório de vendas
+            for dado in dados_relatorio:
+                self.treeview_relatorio.insert("", "end", values=dado)
+            # Fechar a conexão com o banco de dados
+            conn.close()
+            self.enty_dia.delete(0, "end")
+        else:
+            messagebox.showerror("Error", "Data selecionada não existente no banco de dados!")
+
+    def pesquisar_rela_semana(self):
+        # Conectar ao banco de dados
+        conn = sqlite3.connect("SistemaPDV.db")
+        cursor = conn.cursor()
+
+        receber_enty_dia_ini = self.enty_dia_ini_sem.get()
+        receber_enty_dia_fim = self.enty_dia_fim_sem.get()
+        # Usando slicing para obter dia, mês e ano Inicio
+        dia_ini = receber_enty_dia_ini[0:2]
+        mes_ini = receber_enty_dia_ini[3:5]
+        ano_ini = receber_enty_dia_ini[6:11]
+        palavra_invertida_ini = f"{ano_ini}-{mes_ini}-{dia_ini}"
+        # Usando slicing para obter dia, mês e ano Fim
+        dia_fim = receber_enty_dia_fim[0:2]
+        mes_fim = receber_enty_dia_fim[3:5]
+        ano_fim = receber_enty_dia_fim[6:11]
+        palavra_invertida_fim = f"{ano_fim}-{mes_fim}-{dia_fim}"
+
+        # Limpa os itens existentes na treeview principal
+        for item in self.treeview_relatorio.get_children():
+            self.treeview_relatorio.delete(item)
+
+        # Realizar a consulta ao banco de dados para obter os dados do relatório de vendas da semana
+        cursor.execute("SELECT data, nome_produto, total_compra, quantidade_vendida, forma_pagamento, valor_pago, troco FROM relatorios_vendas WHERE data BETWEEN ? AND ?", (palavra_invertida_ini, palavra_invertida_fim))
+        dados_relatorio_semana = cursor.fetchall()
+
+        if dados_relatorio_semana:
+            # Limpar a Treeview antes de preencher com os novos dados
+            self.treeview_relatorio.delete(*self.treeview_relatorio.get_children())
+
+            # Preencher a Treeview com os dados do relatório de vendas da semana
+            for dado in dados_relatorio_semana:
+                self.treeview_relatorio.insert("", "end", values=dado)
+
+        else:
+            messagebox.showerror("Error", "Nenhum registro encontrado para a semana selecionada!")
+
+        # Fechar a conexão com o banco de dados
+        conn.close()
+
+    def pesquisar_rela_mes(self):
+        # Conectar ao banco de dados
+        conn = sqlite3.connect("SistemaPDV.db")
+        cursor = conn.cursor()
+
+        receber_enty_dia_ini = self.enty_dia_ini_mes.get()
+        receber_enty_dia_fim = self.enty_dia_fim_mes.get()
+        # Usando slicing para obter dia, mês e ano Inicio
+        dia_ini = receber_enty_dia_ini[0:2]
+        mes_ini = receber_enty_dia_ini[3:5]
+        ano_ini = receber_enty_dia_ini[6:11]
+        palavra_invertida_ini = f"{ano_ini}-{mes_ini}-{dia_ini}"
+        # Usando slicing para obter dia, mês e ano Fim
+        dia_fim = receber_enty_dia_fim[0:2]
+        mes_fim = receber_enty_dia_fim[3:5]
+        ano_fim = receber_enty_dia_fim[6:11]
+        palavra_invertida_fim = f"{ano_fim}-{mes_fim}-{dia_fim}"
+
+        # Limpa os itens existentes na treeview principal
+        for item in self.treeview_relatorio.get_children():
+            self.treeview_relatorio.delete(item)
+
+        # Realizar a consulta ao banco de dados para obter os dados do relatório de vendas da semana
+        cursor.execute("SELECT data, nome_produto, total_compra, quantidade_vendida, forma_pagamento, valor_pago, troco FROM relatorios_vendas WHERE data BETWEEN ? AND ?", (palavra_invertida_ini, palavra_invertida_fim))
+        dados_relatorio_ini = cursor.fetchall()
+
+        # Verificar se a data invertida está presente nos resultados da consulta e inserir na treeview principal
+        if dados_relatorio_ini:
+            # Limpar a Treeview antes de preencher com os novos dados
+            self.treeview_relatorio.delete(*self.treeview_relatorio.get_children())
+
+            # Preencher a Treeview com os dados do relatório de vendas da semana
+            for dado in dados_relatorio_ini:
+                self.treeview_relatorio.insert("", "end", values=dado)
+        else:
+            messagebox.showerror("Error", "Nenhum registro encontrado para o mês selecionado!")
+
+            # Fechar a conexão com o banco de dados
+            conn.close()
+
+    def gerar_pdf(self, treeview):
+        # Obtenha os dados da treeview
+        data = [treeview.heading(column)["text"] for column in treeview["columns"]]
+        data_rows = []
+        total_vendas = 0.0  # Variável para armazenar a soma dos valores da coluna 2 (total da tabela)
+
+        for item in treeview.get_children():
+            row = [treeview.item(item, "values")[column] for column in range(len(data))]
+            total_vendas += float(row[2])  # Adiciona o valor da coluna 2 (total da tabela) à soma
+            data_rows.append(row)
+
+        # Criação do documento PDF, Defina o tamanho e a orientação do PDF
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")  # Obtemos o timestamp atual
+        nome_arquivo = f"relatorio_{timestamp}.pdf"  # Nome do arquivo com timestamp
+        doc = SimpleDocTemplate(os.path.join("Relatórios", nome_arquivo), pagesize=landscape(letter))
+
+        # Crie a lista de elementos
+        elements = []
+
+        # Adicionar o total de vendas abaixo da tabela
+        style_title = ParagraphStyle(
+            name='TotalStyle',
+            fontName='Helvetica-Bold',
+            fontSize=20,
+            textColor=colors.black,  # Altere a cor para preto
+            alignment=1,  # 1 = Center
+        )
+
+        p_title = Paragraph(self.title_text, style_title)
+        elements.append(p_title)
+
+        # Adicionar um espaço em branco entre o titulo e a tabela 
+        elements.append(Spacer(1, 20))
+
+        # Defina o estilo da tabela
+        style = TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ])
+        table = Table([data] + data_rows, repeatRows=1, hAlign="CENTER")
+        table.setStyle(style)
+
+        # Adicione a tabela à lista de elementos
+        elements.append(table)
+
+        # Adicionar um espaço em branco entre a tabela e o total de vendas
+        elements.append(Spacer(1, 20))
+
+        # Adicionar o total de vendas abaixo da tabela
+        style_total = ParagraphStyle(
+            name='TotalStyle',
+            fontName='Helvetica-Bold',
+            fontSize=14,
+            textColor=colors.red,  # Altere a cor para vermelho
+            alignment=1,  # 1 = Center
+        )
+        total_vendas_text = f"Total de vendas: R$ {total_vendas:.2f}"
+        p_total = Paragraph(total_vendas_text, style_total)
+        elements.append(p_total)
+
+        # Construir o documento PDF
+        doc.build(elements)
+
+        # Exiba uma mensagem informando que o PDF foi gerado
+        messagebox.showinfo("PDF", f"PDF gerado com sucesso: {nome_arquivo}")
+
+    def imprimir_rela_dia(self):
+        self.title_text = "Relatório de vendas do Dia"
+        self.gerar_pdf(self.treeview_relatorio)
+        self.enty_dia.delete(0, "end")
+        self.criar_treeview()
+
+    def imprimir_rela_sem(self):
+        self.title_text = "Relatório de vendas da semana"
+        self.gerar_pdf(self.treeview_relatorio)
+        self.enty_dia_ini_sem.delete(0, "end")
+        self.enty_dia_fim_sem.delete(0, "end")
+        self.criar_treeview()
+
+    def imprimir_rela_mes(self):
+        self.title_text = "Relatório de vendas do Mês"
+        self.gerar_pdf(self.treeview_relatorio)
+        self.enty_dia_ini_mes.delete(0, "end")
+        self.enty_dia_fim_mes.delete(0, "end")
+        self.criar_treeview()
+
+    def imprimir_rela_todos(self):
+        self.title_text = "Relatório de todas as vendas"
+        self.gerar_pdf(self.treeview_relatorio)
+        self.criar_treeview()
