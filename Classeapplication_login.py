@@ -77,7 +77,7 @@ class ApplicationLogin:
     def Tela(self):
         self.janela.geometry("700x400+500+200")
         self.janela.title("Area de login")
-        # self.janela.iconbitmap("img/icon.ico")
+        self.janela.iconbitmap("img/icons/caixa-icone.ico")
         self.janela.resizable(False, False)
 
     # CAMPO DE LOGIN

@@ -15,7 +15,7 @@ class TelaUsuario:
         self.janela_pdv = Toplevel(janela_principal)
         self.janela_pdv.geometry("{}x{}+0+0".format(self.janela_pdv.winfo_screenwidth(), self.janela_pdv.winfo_screenheight()))
         self.janela_pdv.title("Sistema de caixa")
-        self.janela_pdv.iconbitmap("img/icon.ico")
+        self.janela_pdv.iconbitmap("img/icons/caixa-icone.ico")
         self.janela_pdv.resizable(False, False)
         self.Criar_Interface()
         self.Treeview()
