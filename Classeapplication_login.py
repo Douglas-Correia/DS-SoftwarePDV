@@ -1,4 +1,4 @@
-from tkinter import Tk, PhotoImage, messagebox
+from tkinter import Tk, PhotoImage, messagebox, Label
 import customtkinter as ctk
 import sqlite3
 from ClasseTelaUsuario import TelaUsuario
@@ -83,7 +83,7 @@ class ApplicationLogin:
     # CAMPO DE LOGIN
     def Tela_Login(self):
         self.img = PhotoImage(file="img/icons/caixa-376.png")
-        self.label_img = ctk.CTkLabel(master=self.janela, image=self.img)
+        self.label_img = Label(master=self.janela, image=self.img, background="#252525")
         self.label_img.place(x=5, y=50)
 
         # FRAME DA JANELA DE LOGIN

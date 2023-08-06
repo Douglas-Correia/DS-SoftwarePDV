@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import Toplevel, Label, Button, Frame, messagebox ,ttk
+from tkinter import Toplevel, Label, Entry ,Button, Frame, messagebox, ttk, PhotoImage, StringVar
 import customtkinter as ctk
 from datetime import datetime
 from tkinter import simpledialog
@@ -10,6 +10,7 @@ from reportlab.platypus import Paragraph
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 import sqlite3
+
 
 # teclas_de_atalho.py
 class TeclasDeAtalho:
@@ -32,7 +33,7 @@ class TeclasDeAtalho:
     def acao_f1(self, event):
         # Implemente aqui a ação desejada para a tecla F1
         self.abrir_janela_pesquisa()
-    
+
     def acao_f2(self, event):
         # Implemente aqui a ação desejada para a tecla F3
         self.realizar_pagamento_dinheiro()
@@ -59,7 +60,7 @@ class TeclasDeAtalho:
     def abrir_janela_pesquisa(self):
         self.executar_funcao_pesquisar()
 
- # CONSULTAR PRODUTOS CADASTRADOS, SELECIONAR O PRODUTO PARA VENDA. AÇÃO DO F1
+    # CONSULTAR PRODUTOS CADASTRADOS, SELECIONAR O PRODUTO PARA VENDA. AÇÃO DO F1
     @classmethod
     def consultar_produtos(cls):
         conn = sqlite3.connect("SistemaPDV.db")
@@ -80,16 +81,20 @@ class TeclasDeAtalho:
         frame_pesquisar.pack(padx=10, pady=10)
 
         # Adicionar os campos, botões e Treeview ao frame_quantidade
-        label_pesquisar = Label(frame_pesquisar, text="Pesquisar produto", font="Roboto 14", anchor="center", background="white")
+        label_pesquisar = Label(frame_pesquisar, text="Pesquisar produto", font="Roboto 14", anchor="center",
+                                background="white")
         label_pesquisar.grid(row=0, column=0, sticky="nsew", padx=20)
 
         # Criar um botão para adicionar o código do produto no entry da TelaUsuario
-        btn_adicionar = Button(frame_pesquisar, text="Adicionar", font="Roboto 12", height=2, fg="white", background="blue" ,command=self.adicionar_codigo_produto)
+        btn_adicionar = Button(frame_pesquisar, text="Adicionar", font="Roboto 12", height=2, fg="white",
+                               background="blue", command=self.adicionar_codigo_produto)
         btn_adicionar.grid(row=1, column=0, padx=20, pady=10, sticky="nsew")
 
         # Criar uma Treeview para exibir os produtos do banco de dados
         # Criar uma Treeview para exibir os produtos do banco de dados
-        self.treeview_produtos = ttk.Treeview(frame_pesquisar, height=10, columns=("cod_produto", "descricao", "quantidade", "vlr_unitario"), show="headings")
+        self.treeview_produtos = ttk.Treeview(frame_pesquisar, height=10,
+                                              columns=("cod_produto", "descricao", "quantidade", "vlr_unitario"),
+                                              show="headings")
         self.treeview_produtos.heading("cod_produto", text="Cód. Produto")
         self.treeview_produtos.heading("descricao", text="Descrição")
         self.treeview_produtos.heading("quantidade", text="Qtdade.")
@@ -134,7 +139,7 @@ class TeclasDeAtalho:
     def selecionar_produto(self, event):
         # Obter o item selecionado na Treeview
         item_selecionado = self.treeview_produtos.selection()
-        
+
         if item_selecionado:
             # Obter os valores das colunas do item selecionado
             cod_produto = self.treeview_produtos.item(item_selecionado, "values")[0]
@@ -149,10 +154,10 @@ class TeclasDeAtalho:
             cod_produto = self.treeview_produtos.item(item_selecionado, "values")[0]
             # Atualizar o código do produto no entry da TelaUsuario
             self.tela_usuario.atualizar_codigo_produto(cod_produto)
-        # Fechar o TopLevel após adicionar o código do produto
+            # Fechar o TopLevel após adicionar o código do produto
             self.top_pesquisar.destroy()
 
-# FUNÇÃO PARA CANCELAR UM PRODUTO SELECIONADO PARA VENDA. AÇÃO DO F2
+    # FUNÇÃO PARA CANCELAR UM PRODUTO SELECIONADO PARA VENDA. AÇÃO DO F2
     def executar_funcao_cancelar_produto(self):
         self.remover_produto_selecionado()
 
@@ -175,65 +180,222 @@ class TeclasDeAtalho:
             else:
                 # Caso não tenha mais itens na Treeview, limpar a label
                 self.tela_usuario.label_descricao_produto["text"] = ""
-            
+
             # Limpar a imagem do produto no frame_imagem
-            self.limpar_imagem() # PRECISAMOS RESOLVER O PROBLEMA DE REMOVER A IMAGEM SOMENTE DO ITEM EXCLUIDO.
+            self.limpar_imagem()  # PRECISAMOS RESOLVER O PROBLEMA DE REMOVER A IMAGEM SOMENTE DO ITEM EXCLUIDO.
 
             # Recalcular e atualizar os valores
             self.tela_usuario.calcular_valores()
-            
+
     def limpar_imagem(self):
         # Remove a imagem do label_imagem
         if self.tela_usuario.label_imagem_prod is not None:
             self.tela_usuario.label_imagem_prod.pack_forget()
             self.tela_usuario.label_imagem_prod = None
 
-# FUNÇÃO PARA PAGAMENTO, FINALIZAR O PAGAMENTO E LANÇAR NO RELATÓRIO.
+    # FUNÇÃO PARA PAGAMENTO, FINALIZAR O PAGAMENTO E LANÇAR NO RELATÓRIO.
     def realizar_pagamento_dinheiro(self):
-        total_compra, produtos_quantidades = self.tela_usuario.calcular_total_compra()
+        # Obter os produtos selecionados da instância da classe TelaUsuario
+        total_compra, produtos_selecionados = self.tela_usuario.obter_produtos_selecionados()
 
-        data_hora_atual = datetime.now()
-        valor_pago = simpledialog.askfloat("Pagamento em Dinheiro", f"Total da Compra: R$ {total_compra:.2f}\nDigite o valor pago em dinheiro:")
+        # Mostrar os produtos selecionados na janela de pagamento
+        if produtos_selecionados:
+            self.total_compra = total_compra
+            self.produtos_quantidades = produtos_selecionados
+            self.troco = 0
 
-        if valor_pago is not None:
-            troco = valor_pago - total_compra
-            messagebox.showinfo("Troco", f"Troco: R$ {troco:.2f}")
+            # Calcular o valor total somado de todos os itens da tabela
+            valor_total_somado = sum(produto[4] for produto in produtos_selecionados)
 
-            for nome_produto, quantidade_vendida in produtos_quantidades:
-                self.registrar_pagamento_no_relatorio(data_hora_atual, nome_produto ,total_compra, quantidade_vendida ,"Dinheiro", valor_pago, troco)
-            self.limpar_tela_apos_pagamento()
+        #data_hora_atual = datetime.now()
+
+        # Criar o TopLevel usando a instância da janela principal
+        self.top_pagamento = Toplevel(self.janela)
+        self.top_pagamento.title("Pagamentos")
+        self.top_pagamento.config(background="#fff")
+
+        # Adicionar um frame ao TopLevel para conter os campos desejados
+        frame_pagamento = Frame(self.top_pagamento, bg="white")
+        frame_pagamento.grid(row=0, column=0)
+
+        frame_btn = Frame(self.top_pagamento, bg="white")
+        frame_btn.grid(row=1, column=0, sticky="nw")
+
+        frame_footer = Frame(self.top_pagamento, bg="white")
+        frame_footer.grid(row=2, column=0, sticky="nsew")
+
+        frame_rigth = Frame(self.top_pagamento, bg="white")
+        frame_rigth.grid(row=0, column=1, columnspan=2 ,rowspan=8, sticky="nsew")
+
+        self.lb_pagamento = Label(frame_pagamento, text=f"PAGAMENTO\nR$ {self.total_compra:.2f}", width=25, background="#86C335", fg="#fff", font="Helvetica 13")
+        self.lb_pagamento.grid(row=0, column=0, padx=10, pady=10)
+
+        self.lb_troco = Label(frame_pagamento, text=f"TROCO\nR$ {self.troco:.2f}", width=25, background="#4D4D4D", fg="#fff", font="Helvetica 13")
+        self.lb_troco.grid(row=0, column=1, padx=2, pady=10)
+
+        self.lb_forma_pagamento = Label(frame_pagamento, text="FORMA DE PAGAMENTO", background="#fff" ,fg="black", font="Helvetica 18", anchor="w")
+        self.lb_forma_pagamento.grid(row=1, column=0, columnspan=3, padx=10 ,pady=5, sticky="nw")
+
+        self.btn_dinheiro = Button(frame_btn, text="DINHEIRO", width=10, height=4, background="#8C8C8C", fg="#fff", anchor="center", font="Helvetica 15", command=self.selecionado_dinheiro)
+        self.btn_dinheiro.grid(row=0, column=0, padx=(10, 0), pady=1, sticky="nw")
+
+        self.btn_cartao_credito = Button(frame_btn, text="CARTÃO DE\nCRÉDITO", width=10, height=4, background="#8C8C8C", fg="#fff", anchor="center", font="Helvetica 15", command=self.selecionado_cartao_credito)
+        self.btn_cartao_credito.grid(row=1, column=0, padx=(10, 0), pady=1, sticky="nw")
+
+        self.btn_cartao_debito = Button(frame_btn, text="CARTÃO DE \nDÉBITO", width=10, height=4, background="#8C8C8C", fg="#fff", anchor="center", font="Helvetica 15", command=self.selecionado_cartao_debito)
+        self.btn_cartao_debito.grid(row=2, column=0, padx=(10, 0), pady=1, sticky="nw")
+
+        self.btn_pix = Button(frame_btn, text="PIX", width=10, height=4, background="#8C8C8C",  fg="#fff", anchor="center", font="Helvetica 15", command=self.selecionar_pix)
+        self.btn_pix.grid(row=3, column=0, padx=(10, 0), pady=1, sticky="nw")
+
+        self.btn_vazio1 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff", font="Helvetica 15", state="disabled")
+        self.btn_vazio1.grid(row=0, column=1, padx=1, pady=1, sticky="nw")
+
+        self.btn_vazio2 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff", font="Helvetica 15", state="disabled")
+        self.btn_vazio2.grid(row=1, column=1, padx=1, pady=1, sticky="nw")
+
+        self.btn_vazio3 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff",  font="Helvetica 15", state="disabled")
+        self.btn_vazio3.grid(row=2, column=1, padx=1, pady=1, sticky="nw")
+
+        self.btn_vazio4 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff", font="Helvetica 15", state="disabled")
+        self.btn_vazio4.grid(row=3, column=1, padx=1, pady=1, sticky="nw")
+
+        self.btn_vazio5 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff", font="Helvetica 15", state="disabled")
+        self.btn_vazio5.grid(row=0, column=2, padx=1, pady=1, sticky="nw")
+
+        self.btn_vazio6 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff", font="Helvetica 15", state="disabled")
+        self.btn_vazio6.grid(row=1, column=2, padx=1, pady=1, sticky="nw")
+
+        self.btn_vazio7 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff", font="Helvetica 15", state="disabled")
+        self.btn_vazio7.grid(row=2, column=2, padx=1, pady=1, sticky="nw")
+
+        self.btn_vazio8 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff", font="Helvetica 15", state="disabled")
+        self.btn_vazio8.grid(row=3, column=2, padx=1, pady=1, sticky="nw")
+
+        self.btn_vazio9 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff", font="Helvetica 15", state="disabled")
+        self.btn_vazio9.grid(row=0, column=3, padx=1, pady=1, sticky="nw")
+
+        self.btn_vazio10 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff", font="Helvetica 15", state="disabled")
+        self.btn_vazio10.grid(row=1, column=3, padx=1, pady=1, sticky="nw")
+
+        self.btn_vazio11 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff", font="Helvetica 15", state="disabled")
+        self.btn_vazio11.grid(row=2, column=3, padx=1, pady=1, sticky="nw")
+
+        self.btn_vazio12 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff", font="Helvetica 15", state="disabled")
+        self.btn_vazio12.grid(row=3, column=3, padx=1, pady=1, sticky="nw")
+
+        self.lb_valor_pago = Label(frame_footer, text="VALOR PAGO", background="#fff", fg="black", font="Helvetica 18", anchor="w")
+        self.lb_valor_pago.grid(row=0, column=0, columnspan=4, sticky="nw", padx=(10, 0), pady=(10,0))
+
+        self.enty_valor_pago = ctk.CTkEntry(frame_footer, placeholder_text="R$ 00.00", height=60)
+        self.enty_valor_pago.grid(row=1, column=0, columnspan=3, sticky="ew", padx=(10, 0), pady=(10, 10))
+
+        self.image_confirmar = PhotoImage(file="img/icons/confirm-50x50.png")
+        self.btn_confirmar = Button(frame_footer, image=self.image_confirmar, compound="left", text="CONFIRMAR")
+        self.btn_confirmar.grid(row=1, column=3, padx=(10, 10), pady=(10, 10))
+
+        # Configurar expansão horizontal da coluna que contém o CTkEntry
+        frame_footer.grid_columnconfigure(0, weight=2)
+
+        # FRAME PARA DEMOSNTRAÇÃO DOS PRODUTOS SELECIONADOS E FINALIZAR VENDA
+        # Exibir os produtos selecionados
+        for idx, produto in enumerate(produtos_selecionados, start=1):
+            codigo, descricao, quantidade, valor_unitario, valor_total = produto
+
+            lb_codigo = Label(frame_rigth, text=f"{quantidade} x {codigo}\t\tR$ {valor_unitario:.2f}", font="Helvetica 12")
+            lb_codigo.grid(row=idx, column=0, padx=(10, 2), pady=5, sticky="nw")
+
+            lb_valores = Label(frame_rigth, text=f"{descricao}\tR$ {valor_total:.2f}", font="Helvetica 13")
+            lb_valores.grid(row=idx, column=1, columnspan=2, padx=(0,10), pady=5, sticky="nw")
+
+        # Adicionar a linha de separação below the last product entry
+        linha_separacao = Frame(frame_rigth, bg="black", height=2)
+        linha_separacao.grid(row=len(produtos_selecionados) + 1, column=0, columnspan=4, sticky="new", pady=5)
+
+        # Adicionar o campo de pagamento efetuado com o valor total somado
+        lb_pagamento_efetuado = Label(frame_rigth, text=f"PAGAMENTO EFETUADO", background="#fff", fg="black", anchor="w" ,font="Helvetica 18")
+        lb_pagamento_efetuado.grid(row=len(produtos_selecionados) + 2, column=0, padx=10, pady=5, sticky="nw")
+
+        self.tipo_pagamento = StringVar()
+        lb_tipo_pagamento = Label(frame_rigth, textvariable=self.tipo_pagamento, background="#fff", fg="black", anchor="w", font="Helvetica 18")
+        lb_tipo_pagamento.grid(row=len(produtos_selecionados) + 3, column=0,  padx=10, pady=5, sticky="nw")
+
+        lb_pagamento_efetuado = Label(frame_rigth, text="À VISTA", background="#fff", fg="black", anchor="w", font="Helvetica 18")
+        lb_pagamento_efetuado.grid(row=len(produtos_selecionados) + 2, column=1,  padx=10, pady=5, sticky="ne")
+
+        lb_total_somado = Label(frame_rigth, text=f"R$ {valor_total_somado:.2f}", background="#fff", fg="black", anchor="w", font="Helvetica 18")
+        lb_total_somado.grid(row=len(produtos_selecionados) + 3, column=1, padx=10, pady=5, sticky="ne")
+
+        # Restante do código para exibir os outros campos, como valor a pagar, botões de pagamento, etc.
+
+        # Configurar um Scrollbar caso a lista de produtos seja longa
+        scrollbar = tk.Scrollbar(self.top_pagamento, orient="VERTICAL", command=frame_rigth)
+        scrollbar.grid(row=0, column=1, sticky="ns")
+        frame_rigth.configure(yscrollcommand=scrollbar.set)
+
+        # Centralizar a janela no centro da tela
+        self.centralizar_janela(self.top_pagamento)
+
+        # Separador
+       # separator = ttk.Separator(self.frame_rigth, orient="horizontal")
+      #  separator.grid(row=row + 1, column=0, columnspan=4, sticky="ew", padx=10, pady=5)
+
+
+        #valor_pago =  simpledialog.askfloat("Pagamento em Dinheiro", f"Total da Compra: R$ {total_compra:.2f}\nDigite o valor pago em dinheiro:")
+
+       # if valor_pago is not None:
+      #  troco = valor_pago - total_compra
+       #     messagebox.showinfo("Troco", f"Troco: R$ {troco:.2f}")
+
+           # for nome_produto, quantidade_vendida in produtos_quantidades:
+            #    self.registrar_pagamento_no_relatorio(data_hora_atual, nome_produto, total_compra, quantidade_vendida, "Dinheiro", valor_pago, troco)
+           # self.limpar_tela_apos_pagamento()
 
             # Conectar ao banco de dados
-            conn = sqlite3.connect("SistemaPDV.db")
-            cursor = conn.cursor()
+           # conn = sqlite3.connect("SistemaPDV.db")
+           # cursor = conn.cursor()
 
             # Atualizar o estoque para cada produto vendido
-            for produto, quantidade_vendida in produtos_quantidades:
+            #for produto, quantidade_vendida in produtos_quantidades:
                 # Verificar a quantidade atual no estoque
-                cursor.execute("SELECT estoque FROM produtos WHERE descricao = ?", (produto,))
-                resultado = cursor.fetchone()
+             #   cursor.execute("SELECT estoque FROM produtos WHERE descricao = ?", (produto,))
+              #  resultado = cursor.fetchone()
 
-                if resultado is not None:
-                    quantidade_atual = resultado[0]
-                    nova_quantidade = quantidade_atual - quantidade_vendida
+               # if resultado is not None:
+                #    quantidade_atual = resultado[0]
+                 #   nova_quantidade = quantidade_atual - quantidade_vendida
 
                     # Atualizar o estoque no banco de dados
-                    cursor.execute("UPDATE produtos SET estoque = ? WHERE descricao = ?", (nova_quantidade, produto))
+                  #  cursor.execute("UPDATE produtos SET estoque = ? WHERE descricao = ?", (nova_quantidade, produto))
             # Salvar as alterações e fechar a conexão com o banco de dados
-            conn.commit()
-            conn.close()
-        else:
-            messagebox.showinfo("Cancelado", f"Total da Compra: R$ {total_compra:.2f} com dinheiro cancelado")
-            self.limpar_tela_apos_pagamento()
+            #conn.commit()
+           # conn.close()
+        #else:
+         #   messagebox.showinfo("Cancelado", f"Total da Compra: R$ {total_compra:.2f} com dinheiro cancelado")
+          #  self.limpar_tela_apos_pagamento()
+
+    def selecionado_dinheiro(self):
+        self.tipo_pagamento.set("DINHEIRO")
+
+    def selecionado_cartao_credito(self):
+        self.tipo_pagamento.set("CARTÃO DE CRÉDITO")
+
+    def selecionado_cartao_debito(self):
+        self.tipo_pagamento.set("CARTÃO DE DÉBITO")
+
+    def selecionar_pix(self):
+        self.tipo_pagamento.set("PIX")
 
     def realizar_pagamento_cartao(self):
         total_compra, produtos_quantidades = self.tela_usuario.calcular_total_compra()
         data_hora_atual = datetime.now()
-        confirmar_pag = messagebox.askyesno("Pagamento com Cartão", f"Pagamento de R$ {total_compra:.2f} feito com cartão.")
+        confirmar_pag = messagebox.askyesno("Pagamento com Cartão",
+                                            f"Pagamento de R$ {total_compra:.2f} feito com cartão.")
 
         if confirmar_pag:
             for nome_produto, quantidade_vendida in produtos_quantidades:
-                self.registrar_pagamento_no_relatorio(data_hora_atual, nome_produto ,total_compra, quantidade_vendida ,"Cartão", total_compra, 0)
+                self.registrar_pagamento_no_relatorio(data_hora_atual, nome_produto, total_compra, quantidade_vendida,
+                                                      "Cartão", total_compra, 0)
             self.limpar_tela_apos_pagamento()
 
             # Conectar ao banco de dados
@@ -267,7 +429,8 @@ class TeclasDeAtalho:
 
         if confirmar_pag:
             for nome_produto, quantidade_vendida in produtos_quantidades:
-                self.registrar_pagamento_no_relatorio(data_hora_atual, nome_produto ,total_compra, quantidade_vendida ,"PIX", total_compra, 0)
+                self.registrar_pagamento_no_relatorio(data_hora_atual, nome_produto, total_compra, quantidade_vendida,
+                                                      "PIX", total_compra, 0)
             self.limpar_tela_apos_pagamento()
 
             # Conectar ao banco de dados
@@ -294,18 +457,19 @@ class TeclasDeAtalho:
             messagebox.showinfo("Cancelado", f"Pagamento de R$ {total_compra:.2f} com PIX cancelado.")
             self.limpar_tela_apos_pagamento()
 
-    def registrar_pagamento_no_relatorio(self, data_hora_atual, nome_produto ,total_compra, quantidade_vendida ,forma_pagamento, valor_pago, troco):
+    def registrar_pagamento_no_relatorio(self, data_hora_atual, nome_produto, total_compra, quantidade_vendida,
+                                         forma_pagamento, valor_pago, troco):
         # Implementar a lógica para registrar o pagamento no relatório ou banco de dados
         # Obter a data e hora atual do sistema
         data_hora_atual = datetime.now()
         # Conectar ao banco de dados
         conn = sqlite3.connect("SistemaPDV.db")
         cursor = conn.cursor()
-         # Inserir os dados na tabela "relatorios_vendas"
+        # Inserir os dados na tabela "relatorios_vendas"
         cursor.execute('''
             INSERT INTO relatorios_vendas (data, nome_produto ,total_compra, quantidade_vendida ,forma_pagamento, valor_pago, troco)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (data_hora_atual, nome_produto ,total_compra, quantidade_vendida ,forma_pagamento, valor_pago, troco))
+        ''', (data_hora_atual, nome_produto, total_compra, quantidade_vendida, forma_pagamento, valor_pago, troco))
         # Salvar as alterações e fechar a conexão com o banco de dados
         conn.commit()
         conn.close()
@@ -319,12 +483,12 @@ class TeclasDeAtalho:
         self.limpar_imagem()
         self.tela_usuario.calcular_valores()
 
-# CRIAR UMA JANELA PARA CADASTRO DE PRODUTOS, CÓDIGO INSERIDO NA TelaUsuario E CHAMADA DA FUNÇÃO AQUI.
+    # CRIAR UMA JANELA PARA CADASTRO DE PRODUTOS, CÓDIGO INSERIDO NA TelaUsuario E CHAMADA DA FUNÇÃO AQUI.
     def abrir_janela_cadastro_produtos(self):
         # Chamar o método criar_frame_cadastro da instância de TelaUsuario
         self.tela_usuario.criar_frame_cadastro()
 
-# CRIAR UMA JANELA PARA RELATÓRIO DE VENDAS
+    # CRIAR UMA JANELA PARA RELATÓRIO DE VENDAS
     def relatorio_venda(self):
         self.janela_relatorio = tk.Toplevel()
         self.janela_relatorio.title("Relatório de Vendas")
@@ -345,7 +509,7 @@ class TeclasDeAtalho:
 
         # Crie o frame da direita que irá conter o frame de filtros e a treeview
         self.frame_right = tk.Frame(self.janela_relatorio, bg="white")
-        self.frame_right.grid(row=0, column=1,columnspan=4 ,sticky="nsew")
+        self.frame_right.grid(row=0, column=1, columnspan=4, sticky="nsew")
 
         # Defina a proporção de expansão das colunas
         self.frame_right.grid_columnconfigure(1, weight=1)  # Frame_right ocupa 100% da largura
@@ -355,11 +519,21 @@ class TeclasDeAtalho:
         self.frame_treeview.grid(row=1, column=0, columnspan=4, padx=10, pady=10, sticky="nsew")
 
         # Adicione os botões de filtro dentro do frame_left
-        btn_filtro_dia = ctk.CTkButton(frame_left, text="Vendas do Dia", height=45, hover_color="blue", font=ctk.CTkFont(family="Roboto", size=20), text_color="white", bg_color="#252525", corner_radius=None, command=self.filtrar_vendas_dia)
-        btn_filtro_semana = ctk.CTkButton(frame_left, text="Vendas da Semana", height=45, hover_color="blue", font=ctk.CTkFont(family="Roboto", size=20), text_color="white", bg_color="#252525", corner_radius=None, command=self.filtrar_vendas_semana)
-        btn_filtro_mes = ctk.CTkButton(frame_left, text="Vendas do Mês", height=45, hover_color="blue", font=ctk.CTkFont(family="Roboto", size=20), text_color="white", bg_color="#252525", corner_radius=None, command=self.filtrar_vendas_mes)
-        btn_mostrar_todos = ctk.CTkButton(frame_left, text="Mostrar Todos", height=45, hover_color="blue", font=ctk.CTkFont(family="Roboto", size=20), text_color="white", bg_color="#252525", corner_radius=None, command=self.filtrar_todos_os_dados)
-        btn_sair_relatorio = ctk.CTkButton(frame_left, text="Sair", height=45, hover_color="blue", font=ctk.CTkFont(family="Roboto", size=20), text_color="white", bg_color="#252525", corner_radius=None, command=self.sair_tela_relatorio)
+        btn_filtro_dia = ctk.CTkButton(frame_left, text="Vendas do Dia", height=45, hover_color="blue",
+                                       font=ctk.CTkFont(family="Roboto", size=20), text_color="white",
+                                       bg_color="#252525", corner_radius=None, command=self.filtrar_vendas_dia)
+        btn_filtro_semana = ctk.CTkButton(frame_left, text="Vendas da Semana", height=45, hover_color="blue",
+                                          font=ctk.CTkFont(family="Roboto", size=20), text_color="white",
+                                          bg_color="#252525", corner_radius=None, command=self.filtrar_vendas_semana)
+        btn_filtro_mes = ctk.CTkButton(frame_left, text="Vendas do Mês", height=45, hover_color="blue",
+                                       font=ctk.CTkFont(family="Roboto", size=20), text_color="white",
+                                       bg_color="#252525", corner_radius=None, command=self.filtrar_vendas_mes)
+        btn_mostrar_todos = ctk.CTkButton(frame_left, text="Mostrar Todos", height=45, hover_color="blue",
+                                          font=ctk.CTkFont(family="Roboto", size=20), text_color="white",
+                                          bg_color="#252525", corner_radius=None, command=self.filtrar_todos_os_dados)
+        btn_sair_relatorio = ctk.CTkButton(frame_left, text="Sair", height=45, hover_color="blue",
+                                           font=ctk.CTkFont(family="Roboto", size=20), text_color="white",
+                                           bg_color="#252525", corner_radius=None, command=self.sair_tela_relatorio)
 
         btn_filtro_dia.grid(row=0, padx=1, pady=5, sticky="ew")
         btn_filtro_semana.grid(row=1, padx=1, pady=5, sticky="ew")
@@ -382,7 +556,8 @@ class TeclasDeAtalho:
     def criar_treeview(self):
         # Cria uma única instância da treeview apenas se ela ainda não foi criada
         if self.treeview_relatorio is None:
-            self.treeview_relatorio = ttk.Treeview(self.frame_treeview, height=20, columns=("data", "nome_produto" ,"total_compra", "quantidade_vendida" ,"forma_pagamento", "valor_pago", "troco"))
+            self.treeview_relatorio = ttk.Treeview(self.frame_treeview, height=20, columns=(
+            "data", "nome_produto", "total_compra", "quantidade_vendida", "forma_pagamento", "valor_pago", "troco"))
             self.treeview_relatorio.heading("data", text="Data")
             self.treeview_relatorio.heading("nome_produto", text="Descrição")
             self.treeview_relatorio.heading("total_compra", text="Total da Compra")
@@ -415,13 +590,20 @@ class TeclasDeAtalho:
         self.lb_dia = ctk.CTkLabel(self.frame_filtros, text="DIA INICIO:", font=ctk.CTkFont(family="Roboto", size=25))
         self.lb_dia.grid(row=0, column=0, padx=15, pady=15, sticky="e")
 
-        self.enty_dia = ctk.CTkEntry(self.frame_filtros, placeholder_text="EX 01-01-2023", width=300, height=45, font=ctk.CTkFont(family="Roboto", size=18), text_color="black", bg_color="#252525", corner_radius=None)
+        self.enty_dia = ctk.CTkEntry(self.frame_filtros, placeholder_text="EX 01-01-2023", width=300, height=45,
+                                     font=ctk.CTkFont(family="Roboto", size=18), text_color="black", bg_color="#252525",
+                                     corner_radius=None)
         self.enty_dia.grid(row=0, column=1, padx=5, pady=15, sticky="w")
 
-        self.btn_pesquisar = ctk.CTkButton(self.frame_filtros, text="Pesquisar", width=150, height=45, hover_color="blue", font=ctk.CTkFont(family="Roboto", size=20), text_color="white", bg_color="#252525", corner_radius=1, command=self.pesquisar_rela_dia)
+        self.btn_pesquisar = ctk.CTkButton(self.frame_filtros, text="Pesquisar", width=150, height=45,
+                                           hover_color="blue", font=ctk.CTkFont(family="Roboto", size=20),
+                                           text_color="white", bg_color="#252525", corner_radius=1,
+                                           command=self.pesquisar_rela_dia)
         self.btn_pesquisar.grid(row=0, column=2, padx=5, pady=15, sticky="e")
 
-        btn_imprimir = ctk.CTkButton(self.frame_filtros, text="Imprimir", width=120, height=45, hover_color="blue", font=ctk.CTkFont(family="Roboto", size=20), text_color="white", bg_color="#252525", corner_radius=None, command=self.imprimir_rela_dia)
+        btn_imprimir = ctk.CTkButton(self.frame_filtros, text="Imprimir", width=120, height=45, hover_color="blue",
+                                     font=ctk.CTkFont(family="Roboto", size=20), text_color="white", bg_color="#252525",
+                                     corner_radius=None, command=self.imprimir_rela_dia)
         btn_imprimir.grid(row=0, column=3, padx=5, pady=15, sticky="w")
 
     def filtrar_vendas_semana(self):
@@ -430,22 +612,33 @@ class TeclasDeAtalho:
         self.criar_treeview()
 
         # Adicione no frame os elementos de filtro (label, entry e botão)
-        self.lb_dia_ini_sem = ctk.CTkLabel(self.frame_filtros, text="DIA INICIO: ", font=ctk.CTkFont(family="Roboto", size=25))
+        self.lb_dia_ini_sem = ctk.CTkLabel(self.frame_filtros, text="DIA INICIO: ",
+                                           font=ctk.CTkFont(family="Roboto", size=25))
         self.lb_dia_ini_sem.grid(row=0, column=0, padx=15, pady=15)
 
-        self.enty_dia_ini_sem = ctk.CTkEntry(self.frame_filtros, placeholder_text="EX 01-01-2023", width=200, height=45, font=ctk.CTkFont(family="Roboto", size=18), text_color="black", bg_color="#252525", corner_radius=1)
+        self.enty_dia_ini_sem = ctk.CTkEntry(self.frame_filtros, placeholder_text="EX 01-01-2023", width=200, height=45,
+                                             font=ctk.CTkFont(family="Roboto", size=18), text_color="black",
+                                             bg_color="#252525", corner_radius=1)
         self.enty_dia_ini_sem.grid(row=0, column=1, padx=15, pady=15)
 
-        self.lb_dia_fim_sem = ctk.CTkLabel(self.frame_filtros, text="DIA FINAL: ", font=ctk.CTkFont(family="Roboto", size=25))
+        self.lb_dia_fim_sem = ctk.CTkLabel(self.frame_filtros, text="DIA FINAL: ",
+                                           font=ctk.CTkFont(family="Roboto", size=25))
         self.lb_dia_fim_sem.grid(row=0, column=2, padx=15, pady=15)
 
-        self.enty_dia_fim_sem = ctk.CTkEntry(self.frame_filtros, placeholder_text="EX 07-01-2023", width=200, height=45, font=ctk.CTkFont(family="Roboto", size=18), text_color="black", bg_color="#252525", corner_radius=1)
+        self.enty_dia_fim_sem = ctk.CTkEntry(self.frame_filtros, placeholder_text="EX 07-01-2023", width=200, height=45,
+                                             font=ctk.CTkFont(family="Roboto", size=18), text_color="black",
+                                             bg_color="#252525", corner_radius=1)
         self.enty_dia_fim_sem.grid(row=0, column=3, padx=15, pady=15)
 
-        self.btn_pesquisar_sem = ctk.CTkButton(self.frame_filtros, text="Pesquisar", width=150, height=45, hover_color="blue", font=ctk.CTkFont(family="Roboto", size=20), text_color="white" ,bg_color="#252525", corner_radius=None, command=self.pesquisar_rela_semana)
+        self.btn_pesquisar_sem = ctk.CTkButton(self.frame_filtros, text="Pesquisar", width=150, height=45,
+                                               hover_color="blue", font=ctk.CTkFont(family="Roboto", size=20),
+                                               text_color="white", bg_color="#252525", corner_radius=None,
+                                               command=self.pesquisar_rela_semana)
         self.btn_pesquisar_sem.grid(row=0, column=4, padx=10, pady=15)
 
-        btn_imprimir = ctk.CTkButton(self.frame_filtros, text="Imprimir", width=120, height=45, hover_color="blue", font=ctk.CTkFont(family="Roboto", size=20), text_color="white", bg_color="#252525", corner_radius=None, command=self.imprimir_rela_sem)
+        btn_imprimir = ctk.CTkButton(self.frame_filtros, text="Imprimir", width=120, height=45, hover_color="blue",
+                                     font=ctk.CTkFont(family="Roboto", size=20), text_color="white", bg_color="#252525",
+                                     corner_radius=None, command=self.imprimir_rela_sem)
         btn_imprimir.grid(row=0, column=5, padx=10, pady=15)
 
     def filtrar_vendas_mes(self):
@@ -454,22 +647,33 @@ class TeclasDeAtalho:
         self.criar_treeview()
 
         # Adicione no frame os elementos de filtro (label, entry e botão)
-        self.lb_dia_ini_mes = ctk.CTkLabel(self.frame_filtros, text="DIA INICIO: ", font=ctk.CTkFont(family="Roboto", size=25))
+        self.lb_dia_ini_mes = ctk.CTkLabel(self.frame_filtros, text="DIA INICIO: ",
+                                           font=ctk.CTkFont(family="Roboto", size=25))
         self.lb_dia_ini_mes.grid(row=0, column=0, padx=15, pady=15)
 
-        self.enty_dia_ini_mes = ctk.CTkEntry(self.frame_filtros, placeholder_text="EX 01-01-2023", width=200, height=45, font=ctk.CTkFont(family="Roboto", size=18), text_color="black", bg_color="#252525", corner_radius=1)
+        self.enty_dia_ini_mes = ctk.CTkEntry(self.frame_filtros, placeholder_text="EX 01-01-2023", width=200, height=45,
+                                             font=ctk.CTkFont(family="Roboto", size=18), text_color="black",
+                                             bg_color="#252525", corner_radius=1)
         self.enty_dia_ini_mes.grid(row=0, column=1, padx=15, pady=15)
 
-        self.lb_dia_fim_mes = ctk.CTkLabel(self.frame_filtros, text="DIA FINAL: ", font=ctk.CTkFont(family="Roboto", size=25))
+        self.lb_dia_fim_mes = ctk.CTkLabel(self.frame_filtros, text="DIA FINAL: ",
+                                           font=ctk.CTkFont(family="Roboto", size=25))
         self.lb_dia_fim_mes.grid(row=0, column=2, padx=15, pady=15)
 
-        self.enty_dia_fim_mes = ctk.CTkEntry(self.frame_filtros, placeholder_text="EX 01-02-2023", width=200, height=45, font=ctk.CTkFont(family="Roboto", size=18), text_color="black", bg_color="#252525", corner_radius=None)
+        self.enty_dia_fim_mes = ctk.CTkEntry(self.frame_filtros, placeholder_text="EX 01-02-2023", width=200, height=45,
+                                             font=ctk.CTkFont(family="Roboto", size=18), text_color="black",
+                                             bg_color="#252525", corner_radius=None)
         self.enty_dia_fim_mes.grid(row=0, column=3, padx=15, pady=15)
 
-        self.btn_pesquisar_mes = ctk.CTkButton(self.frame_filtros, text="Pesquisar", width=150, height=45, hover_color="blue", font=ctk.CTkFont(family="Roboto", size=20), text_color="white" ,bg_color="#252525", corner_radius=None, command=self.pesquisar_rela_mes)
+        self.btn_pesquisar_mes = ctk.CTkButton(self.frame_filtros, text="Pesquisar", width=150, height=45,
+                                               hover_color="blue", font=ctk.CTkFont(family="Roboto", size=20),
+                                               text_color="white", bg_color="#252525", corner_radius=None,
+                                               command=self.pesquisar_rela_mes)
         self.btn_pesquisar_mes.grid(row=0, column=4, padx=10, pady=15)
 
-        btn_imprimir = ctk.CTkButton(self.frame_filtros, text="Imprimir", width=120, height=45, hover_color="blue", font=ctk.CTkFont(family="Roboto", size=20), text_color="white", bg_color="#252525", corner_radius=None, command=self.imprimir_rela_mes)
+        btn_imprimir = ctk.CTkButton(self.frame_filtros, text="Imprimir", width=120, height=45, hover_color="blue",
+                                     font=ctk.CTkFont(family="Roboto", size=20), text_color="white", bg_color="#252525",
+                                     corner_radius=None, command=self.imprimir_rela_mes)
         btn_imprimir.grid(row=0, column=5, padx=10, pady=15)
 
     def filtrar_todos_os_dados(self):
@@ -478,10 +682,13 @@ class TeclasDeAtalho:
         self.criar_treeview()
 
         # Crie os elementos de filtro (label, entry e botão) dentro do frame_filtros
-        lb_title = ctk.CTkLabel(self.frame_filtros, text="RELATÓRIO DE TODAS AS VENDAS", font=ctk.CTkFont(family="Roboto", size=25), anchor="center", bg_color="white")
-        lb_title.grid(row=0, column=0, columnspan=3 ,padx=50, pady=15)
+        lb_title = ctk.CTkLabel(self.frame_filtros, text="RELATÓRIO DE TODAS AS VENDAS",
+                                font=ctk.CTkFont(family="Roboto", size=25), anchor="center", bg_color="white")
+        lb_title.grid(row=0, column=0, columnspan=3, padx=50, pady=15)
 
-        btn_imprimir = ctk.CTkButton(self.frame_filtros, text="Imprimir", width=120, height=45, hover_color="blue", font=ctk.CTkFont(family="Roboto", size=20), text_color="white", bg_color="#252525", corner_radius=1, command=self.imprimir_rela_todos)
+        btn_imprimir = ctk.CTkButton(self.frame_filtros, text="Imprimir", width=120, height=45, hover_color="blue",
+                                     font=ctk.CTkFont(family="Roboto", size=20), text_color="white", bg_color="#252525",
+                                     corner_radius=1, command=self.imprimir_rela_todos)
         btn_imprimir.grid(row=0, column=3, padx=10, pady=15)
 
         # Conectar ao banco de dados
@@ -489,7 +696,8 @@ class TeclasDeAtalho:
         cursor = conn.cursor()
 
         # Lógica para filtrar todas as vendas do banco de dados
-        cursor.execute("SELECT data, nome_produto ,total_compra, quantidade_vendida ,forma_pagamento, valor_pago, troco FROM relatorios_vendas")
+        cursor.execute(
+            "SELECT data, nome_produto ,total_compra, quantidade_vendida ,forma_pagamento, valor_pago, troco FROM relatorios_vendas")
         dados_relatorio = cursor.fetchall()
 
         if dados_relatorio:  # Verifica se a lista de dados não está vazia
@@ -517,7 +725,9 @@ class TeclasDeAtalho:
         palavra_invertida = f"{ano}-{mes}-{dia}"
 
         # Lógica para filtrar as vendas do dia no banco de dados
-        cursor.execute("SELECT data, nome_produto ,total_compra, quantidade_vendida ,forma_pagamento, valor_pago, troco FROM relatorios_vendas WHERE data LIKE ?", (f"{palavra_invertida}%",))
+        cursor.execute(
+            "SELECT data, nome_produto ,total_compra, quantidade_vendida ,forma_pagamento, valor_pago, troco FROM relatorios_vendas WHERE data LIKE ?",
+            (f"{palavra_invertida}%",))
         dados_relatorio = cursor.fetchall()
 
         # Verificar se a data invertida está presente nos resultados da consulta
@@ -554,7 +764,9 @@ class TeclasDeAtalho:
             self.treeview_relatorio.delete(item)
 
         # Realizar a consulta ao banco de dados para obter os dados do relatório de vendas da semana
-        cursor.execute("SELECT data, nome_produto, total_compra, quantidade_vendida, forma_pagamento, valor_pago, troco FROM relatorios_vendas WHERE data BETWEEN ? AND ?", (palavra_invertida_ini, palavra_invertida_fim))
+        cursor.execute(
+            "SELECT data, nome_produto, total_compra, quantidade_vendida, forma_pagamento, valor_pago, troco FROM relatorios_vendas WHERE data BETWEEN ? AND ?",
+            (palavra_invertida_ini, palavra_invertida_fim))
         dados_relatorio_semana = cursor.fetchall()
 
         if dados_relatorio_semana:
@@ -594,7 +806,9 @@ class TeclasDeAtalho:
             self.treeview_relatorio.delete(item)
 
         # Realizar a consulta ao banco de dados para obter os dados do relatório de vendas da semana
-        cursor.execute("SELECT data, nome_produto, total_compra, quantidade_vendida, forma_pagamento, valor_pago, troco FROM relatorios_vendas WHERE data BETWEEN ? AND ?", (palavra_invertida_ini, palavra_invertida_fim))
+        cursor.execute(
+            "SELECT data, nome_produto, total_compra, quantidade_vendida, forma_pagamento, valor_pago, troco FROM relatorios_vendas WHERE data BETWEEN ? AND ?",
+            (palavra_invertida_ini, palavra_invertida_fim))
         dados_relatorio_ini = cursor.fetchall()
 
         # Verificar se a data invertida está presente nos resultados da consulta e inserir na treeview principal
@@ -642,7 +856,7 @@ class TeclasDeAtalho:
         p_title = Paragraph(self.title_text, style_title)
         elements.append(p_title)
 
-        # Adicionar um espaço em branco entre o titulo e a tabela 
+        # Adicionar um espaço em branco entre o titulo e a tabela
         elements.append(Spacer(1, 20))
 
         # Defina o estilo da tabela

@@ -479,20 +479,35 @@ class TelaUsuario:
         # Obter os valores das Entries
         self.Receber_variaveis_produtos()
 
-        # Conectar ao banco de dados
+        # Verificar se o código já existe no banco de dados
         conn = sqlite3.connect("SistemaPDV.db")
         cursor = conn.cursor()
 
+        select_query = "SELECT codigo_interno FROM produtos WHERE codigo_interno = ?"
+        cursor.execute(select_query, (self.cod_produto,))
+        resultado = cursor.fetchone()
+
+        if resultado is not None:
+            messagebox.showinfo("Error", "Esse código já está sendo utilizado. Por favor, escolha outro.")
+            conn.close()
+            return
+
         # Inserir os dados na tabela produtos
         insert_query = "INSERT INTO produtos (codigo_interno, data_atualizacao, descricao, preco_custo, ipi, lucro, preco_venda, qtde_minima, caminho_imagem, marca, fornecedor, estoque) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        messagebox.showinfo("Sucesso", "Produtos cadastrados com sucesso!")  # 267cb5
         self.caminho_imagem_vazio = "None"
 
         if self.caminho_imagem:
             # Se o caminho da imagem existir, usar o valor normalmente
-            cursor.execute(insert_query, (self.cod_produto, self.data_atualizacao, self.descricao, self.preco_custo, self.IPI, self.preco_lucro, self.preco_venda, self.qtde_minima, self.caminho_imagem, self.marca, self.fornecedor, self.estoque))
+            cursor.execute(insert_query, (
+                self.cod_produto, self.data_atualizacao, self.descricao, self.preco_custo, self.IPI, self.preco_lucro,
+                self.preco_venda, self.qtde_minima, self.caminho_imagem, self.marca, self.fornecedor, self.estoque))
         else:
             # Se o caminho da imagem for vazio, passar None ou uma string vazia
-            cursor.execute(insert_query, (self.cod_produto, self.data_atualizacao, self.descricao, self.preco_custo, self.IPI, self.preco_lucro, self.preco_venda, self.qtde_minima, self.caminho_imagem_vazio, self.marca, self.fornecedor, self.estoque))
+            cursor.execute(insert_query, (
+                self.cod_produto, self.data_atualizacao, self.descricao, self.preco_custo, self.IPI, self.preco_lucro,
+                self.preco_venda, self.qtde_minima, self.caminho_imagem_vazio, self.marca, self.fornecedor,
+                self.estoque))
 
         # Commit para salvar as alterações no banco de dados
         conn.commit()
@@ -745,6 +760,25 @@ class TelaUsuario:
 
         # Recriar a interface da tela principal
         self.criar_interface_tela_principal()
+
+    # NOVO CAMPO ALTERADO PARA NOVA FORMA DE PAGAMENTO
+    def obter_produtos_selecionados(self):
+        # Implemente aqui a lógica para obter a lista de produtos selecionados
+        produtos_selecionados = []
+        total_compra = 0  # Variável para armazenar o total da compra
+
+        for item in self.treeview_produtos.get_children():
+            codigo = self.treeview_produtos.item(item, "values")[0]
+            descricao = self.treeview_produtos.item(item, "values")[1]
+            quantidade = self.treeview_produtos.item(item, "values")[2]
+            valor_unitario = float(self.treeview_produtos.item(item, "values")[3])
+            valor_total = float(self.treeview_produtos.item(item, "values")[4])
+            total_compra += float(valor_total)  # Somar ao total da compra
+
+            produtos_selecionados.append((codigo, descricao, quantidade, valor_unitario, valor_total))
+
+        # Retornar o total da compra e a lista de produtos selecionados
+        return total_compra, produtos_selecionados
 
     def Fechar_Tela(self):
         self.janela_pdv.destroy()
