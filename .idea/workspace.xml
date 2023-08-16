@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="44c9a4ba-699f-43a6-93d1-bca29e0c4bac" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/frames_relatorios.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/DLSistemasPDV.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/DLSistemasPDV.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ClasseTelaUsuario.py" beforeDir="false" afterPath="$PROJECT_DIR$/ClasseTelaUsuario.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Classeapplication_login.py" beforeDir="false" afterPath="$PROJECT_DIR$/Classeapplication_login.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DL Sistemas PDV.spec" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Relatórios/relatorio_20230728_164028.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Relatórios/relatorio_20230728_164046.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Relatórios/relatorio_20230728_164101.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Relatórios/relatorio_20230728_164107.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Relatórios/relatorio_20230728_170216.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Relatórios/relatorio_20230729_033130.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Relatórios/relatorio_20230729_215921.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Relatórios/relatorio_20230729_220014.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Relatórios/relatorio_20230731_160710.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Relatórios/relatorio_20230731_165427.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Relatórios/relatorio_20230731_170241.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Relatórios/relatorio_20230731_172022.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Relatórios/relatorio_20230731_174304.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/SistemaPDV.db" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Teclas_de_atalho.py" beforeDir="false" afterPath="$PROJECT_DIR$/Teclas_de_atalho.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ame.spec" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/DL Sistemas PDV/Analysis-00.toc" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/DL Sistemas PDV/DL Sistemas PDV.exe.manifest" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/DL Sistemas PDV/DL Sistemas PDV.pkg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/DL Sistemas PDV/EXE-00.toc" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/DL Sistemas PDV/PKG-00.toc" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/DL Sistemas PDV/PYZ-00.pyz" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/DL Sistemas PDV/PYZ-00.toc" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/DL Sistemas PDV/Tree-00.toc" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/DL Sistemas PDV/Tree-01.toc" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/DL Sistemas PDV/Tree-02.toc" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/DL Sistemas PDV/base_library.zip" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/DL Sistemas PDV/warn-DL Sistemas PDV.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/DL Sistemas PDV/xref-DL Sistemas PDV.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/SistemaPDV.db" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/img/icons/caixa-376.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/img/icons/caixa-exec-icone.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/img/icons/caixa-icone.ico" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/integraçãoNFE.py" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="2Ti8gB5MUJ9bACoXZQhcJyGUt3Z" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RunManager" selected="Python.Classeapplication_login">
+    <configuration name="Classeapplication_login" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="DLSistemasPDV" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Classeapplication_login.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="frames_relatorios" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="DLSistemasPDV" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/frames_relatorios.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.Classeapplication_login" />
+        <item itemvalue="Python.frames_relatorios" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="44c9a4ba-699f-43a6-93d1-bca29e0c4bac" name="Changes" comment="" />
+      <created>1691514650647</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1691514650647</updated>
+    </task>
+    <servers />
+  </component>
+</project>

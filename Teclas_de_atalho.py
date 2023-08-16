@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import Toplevel, Label, Entry ,Button, Frame, messagebox, ttk, PhotoImage, StringVar
+from tkinter import Toplevel, Label, Entry, Button, Frame, messagebox, ttk, PhotoImage, StringVar, Scrollbar
 import customtkinter as ctk
 from datetime import datetime
 from tkinter import simpledialog
@@ -20,8 +20,6 @@ class TeclasDeAtalho:
         # Associa as teclas de função às funções correspondentes
         self.janela.bind("<F1>", self.acao_f1)
         self.janela.bind("<F2>", self.acao_f2)
-        self.janela.bind("<F3>", self.acao_f3)
-        self.janela.bind("<F4>", self.acao_f4)
         self.janela.bind("<F5>", self.acao_f5)
         self.janela.bind("<F6>", self.acao_f6)
         self.janela.bind("<Delete>", self.acao_del)
@@ -36,15 +34,7 @@ class TeclasDeAtalho:
 
     def acao_f2(self, event):
         # Implemente aqui a ação desejada para a tecla F3
-        self.realizar_pagamento_dinheiro()
-
-    def acao_f3(self, event):
-        # Implemente aqui a ação desejada para a tecla F3
-        self.realizar_pagamento_cartao()
-
-    def acao_f4(self, event):
-        # Implemente aqui a ação desejada para a tecla F3
-        self.realizar_pagamento_pix()
+        self.realizar_pagamento()
 
     def acao_f5(self, event):
         # Implemente aqui a ação desejada para a tecla F5
@@ -194,7 +184,7 @@ class TeclasDeAtalho:
             self.tela_usuario.label_imagem_prod = None
 
     # FUNÇÃO PARA PAGAMENTO, FINALIZAR O PAGAMENTO E LANÇAR NO RELATÓRIO.
-    def realizar_pagamento_dinheiro(self):
+    def realizar_pagamento(self):
         # Obter os produtos selecionados da instância da classe TelaUsuario
         total_compra, produtos_selecionados = self.tela_usuario.obter_produtos_selecionados()
 
@@ -202,12 +192,12 @@ class TeclasDeAtalho:
         if produtos_selecionados:
             self.total_compra = total_compra
             self.produtos_quantidades = produtos_selecionados
-            self.troco = 0
+            self.troco = StringVar(value="TROCO\n00,00")
 
             # Calcular o valor total somado de todos os itens da tabela
             valor_total_somado = sum(produto[4] for produto in produtos_selecionados)
 
-        #data_hora_atual = datetime.now()
+        # data_hora_atual = datetime.now()
 
         # Criar o TopLevel usando a instância da janela principal
         self.top_pagamento = Toplevel(self.janela)
@@ -225,73 +215,99 @@ class TeclasDeAtalho:
         frame_footer.grid(row=2, column=0, sticky="nsew")
 
         frame_rigth = Frame(self.top_pagamento, bg="white")
-        frame_rigth.grid(row=0, column=1, columnspan=2 ,rowspan=8, sticky="nsew")
+        frame_rigth.grid(row=0, column=1, columnspan=2, rowspan=7, stick="nsew")
 
-        self.lb_pagamento = Label(frame_pagamento, text=f"PAGAMENTO\nR$ {self.total_compra:.2f}", width=25, background="#86C335", fg="#fff", font="Helvetica 13")
+        frame_btn_finalizar = Frame(self.top_pagamento, bg="white")
+        frame_btn_finalizar.grid(row=2, column=1, columnspan=2, sticky="nsew")
+
+        self.lb_pagamento = Label(frame_pagamento, text=f"PAGAMENTO\nR$ {self.total_compra:.2f}", width=25,
+                                  background="#86C335", fg="#fff", font="Helvetica 13")
         self.lb_pagamento.grid(row=0, column=0, padx=10, pady=10)
 
-        self.lb_troco = Label(frame_pagamento, text=f"TROCO\nR$ {self.troco:.2f}", width=25, background="#4D4D4D", fg="#fff", font="Helvetica 13")
+        self.lb_troco = Label(frame_pagamento, textvariable=self.troco, width=25, background="#4D4D4D", fg="#fff",
+                              font="Helvetica 13")
         self.lb_troco.grid(row=0, column=1, padx=2, pady=10)
 
-        self.lb_forma_pagamento = Label(frame_pagamento, text="FORMA DE PAGAMENTO", background="#fff" ,fg="black", font="Helvetica 18", anchor="w")
-        self.lb_forma_pagamento.grid(row=1, column=0, columnspan=3, padx=10 ,pady=5, sticky="nw")
+        self.lb_forma_pagamento = Label(frame_pagamento, text="FORMA DE PAGAMENTO", background="#fff", fg="black",
+                                        font="Helvetica 18", anchor="w")
+        self.lb_forma_pagamento.grid(row=1, column=0, columnspan=3, padx=10, pady=5, sticky="nw")
 
-        self.btn_dinheiro = Button(frame_btn, text="DINHEIRO", width=10, height=4, background="#8C8C8C", fg="#fff", anchor="center", font="Helvetica 15", command=self.selecionado_dinheiro)
+        self.btn_dinheiro = Button(frame_btn, text="DINHEIRO", width=10, height=4, background="#8C8C8C", fg="#fff",
+                                   anchor="center", font="Helvetica 15", command=self.selecionar_pagamento_dinheiro)
         self.btn_dinheiro.grid(row=0, column=0, padx=(10, 0), pady=1, sticky="nw")
 
-        self.btn_cartao_credito = Button(frame_btn, text="CARTÃO DE\nCRÉDITO", width=10, height=4, background="#8C8C8C", fg="#fff", anchor="center", font="Helvetica 15", command=self.selecionado_cartao_credito)
+        self.btn_cartao_credito = Button(frame_btn, text="CARTÃO DE\nCRÉDITO", width=10, height=4, background="#8C8C8C",
+                                         fg="#fff", anchor="center", font="Helvetica 15",
+                                         command=self.selecionar_pagamento_cartao_credito)
         self.btn_cartao_credito.grid(row=1, column=0, padx=(10, 0), pady=1, sticky="nw")
 
-        self.btn_cartao_debito = Button(frame_btn, text="CARTÃO DE \nDÉBITO", width=10, height=4, background="#8C8C8C", fg="#fff", anchor="center", font="Helvetica 15", command=self.selecionado_cartao_debito)
+        self.btn_cartao_debito = Button(frame_btn, text="CARTÃO DE \nDÉBITO", width=10, height=4, background="#8C8C8C",
+                                        fg="#fff", anchor="center", font="Helvetica 15",
+                                        command=self.selecionar_pagamento_cartao_debito)
         self.btn_cartao_debito.grid(row=2, column=0, padx=(10, 0), pady=1, sticky="nw")
 
-        self.btn_pix = Button(frame_btn, text="PIX", width=10, height=4, background="#8C8C8C",  fg="#fff", anchor="center", font="Helvetica 15", command=self.selecionar_pix)
+        self.btn_pix = Button(frame_btn, text="PIX", width=10, height=4, background="#8C8C8C", fg="#fff",
+                              anchor="center", font="Helvetica 15", command=self.selecionar_pagamento_pix)
         self.btn_pix.grid(row=3, column=0, padx=(10, 0), pady=1, sticky="nw")
 
-        self.btn_vazio1 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff", font="Helvetica 15", state="disabled")
+        self.btn_vazio1 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff",
+                                 font="Helvetica 15", state="disabled")
         self.btn_vazio1.grid(row=0, column=1, padx=1, pady=1, sticky="nw")
 
-        self.btn_vazio2 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff", font="Helvetica 15", state="disabled")
+        self.btn_vazio2 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff",
+                                 font="Helvetica 15", state="disabled")
         self.btn_vazio2.grid(row=1, column=1, padx=1, pady=1, sticky="nw")
 
-        self.btn_vazio3 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff",  font="Helvetica 15", state="disabled")
+        self.btn_vazio3 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff",
+                                 font="Helvetica 15", state="disabled")
         self.btn_vazio3.grid(row=2, column=1, padx=1, pady=1, sticky="nw")
 
-        self.btn_vazio4 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff", font="Helvetica 15", state="disabled")
+        self.btn_vazio4 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff",
+                                 font="Helvetica 15", state="disabled")
         self.btn_vazio4.grid(row=3, column=1, padx=1, pady=1, sticky="nw")
 
-        self.btn_vazio5 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff", font="Helvetica 15", state="disabled")
+        self.btn_vazio5 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff",
+                                 font="Helvetica 15", state="disabled")
         self.btn_vazio5.grid(row=0, column=2, padx=1, pady=1, sticky="nw")
 
-        self.btn_vazio6 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff", font="Helvetica 15", state="disabled")
+        self.btn_vazio6 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff",
+                                 font="Helvetica 15", state="disabled")
         self.btn_vazio6.grid(row=1, column=2, padx=1, pady=1, sticky="nw")
 
-        self.btn_vazio7 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff", font="Helvetica 15", state="disabled")
+        self.btn_vazio7 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff",
+                                 font="Helvetica 15", state="disabled")
         self.btn_vazio7.grid(row=2, column=2, padx=1, pady=1, sticky="nw")
 
-        self.btn_vazio8 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff", font="Helvetica 15", state="disabled")
+        self.btn_vazio8 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff",
+                                 font="Helvetica 15", state="disabled")
         self.btn_vazio8.grid(row=3, column=2, padx=1, pady=1, sticky="nw")
 
-        self.btn_vazio9 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff", font="Helvetica 15", state="disabled")
+        self.btn_vazio9 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff",
+                                 font="Helvetica 15", state="disabled")
         self.btn_vazio9.grid(row=0, column=3, padx=1, pady=1, sticky="nw")
 
-        self.btn_vazio10 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff", font="Helvetica 15", state="disabled")
+        self.btn_vazio10 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff",
+                                  font="Helvetica 15", state="disabled")
         self.btn_vazio10.grid(row=1, column=3, padx=1, pady=1, sticky="nw")
 
-        self.btn_vazio11 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff", font="Helvetica 15", state="disabled")
+        self.btn_vazio11 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff",
+                                  font="Helvetica 15", state="disabled")
         self.btn_vazio11.grid(row=2, column=3, padx=1, pady=1, sticky="nw")
 
-        self.btn_vazio12 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff", font="Helvetica 15", state="disabled")
+        self.btn_vazio12 = Button(frame_btn, text="", width=10, height=4, background="#86C335", fg="#fff",
+                                  font="Helvetica 15", state="disabled")
         self.btn_vazio12.grid(row=3, column=3, padx=1, pady=1, sticky="nw")
 
-        self.lb_valor_pago = Label(frame_footer, text="VALOR PAGO", background="#fff", fg="black", font="Helvetica 18", anchor="w")
-        self.lb_valor_pago.grid(row=0, column=0, columnspan=4, sticky="nw", padx=(10, 0), pady=(10,0))
+        self.lb_valor_pago = Label(frame_footer, text="VALOR PAGO", background="#fff", fg="black", font="Helvetica 18",
+                                   anchor="w")
+        self.lb_valor_pago.grid(row=0, column=0, columnspan=4, sticky="nw", padx=(10, 0), pady=(10, 0))
 
-        self.enty_valor_pago = ctk.CTkEntry(frame_footer, placeholder_text="R$ 00.00", height=60)
+        self.enty_valor_pago = ctk.CTkEntry(frame_footer, placeholder_text="R$ 00.00", height=60,
+                                            font=ctk.CTkFont(family="Helvetica", size=15))
         self.enty_valor_pago.grid(row=1, column=0, columnspan=3, sticky="ew", padx=(10, 0), pady=(10, 10))
 
-        self.image_confirmar = PhotoImage(file="img/icons/confirm-50x50.png")
-        self.btn_confirmar = Button(frame_footer, image=self.image_confirmar, compound="left", text="CONFIRMAR")
+        self.image_confirmar = PhotoImage(file="img\icons\confirm-50x50.png")
+        self.btn_confirmar = Button(frame_footer, image=self.image_confirmar, compound="left", text="CONFIRMAR", bg="white", cursor="hand2", command=self.get_valor_pago_somar_troco)
         self.btn_confirmar.grid(row=1, column=3, padx=(10, 10), pady=(10, 10))
 
         # Configurar expansão horizontal da coluna que contém o CTkEntry
@@ -300,179 +316,138 @@ class TeclasDeAtalho:
         # FRAME PARA DEMOSNTRAÇÃO DOS PRODUTOS SELECIONADOS E FINALIZAR VENDA
         # Exibir os produtos selecionados
         for idx, produto in enumerate(produtos_selecionados, start=1):
-            codigo, descricao, quantidade, valor_unitario, valor_total = produto
+            codigo, self.descricao, self.quantidade, valor_unitario, self.valor_total = produto
 
-            lb_codigo = Label(frame_rigth, text=f"{quantidade} x {codigo}\t\tR$ {valor_unitario:.2f}", font="Helvetica 12")
+            lb_codigo = Label(frame_rigth, text=f"{self.quantidade} x {codigo}\t\tR$ {valor_unitario:.2f}",
+                              font="Helvetica 12", background="#fff")
             lb_codigo.grid(row=idx, column=0, padx=(10, 2), pady=5, sticky="nw")
 
-            lb_valores = Label(frame_rigth, text=f"{descricao}\tR$ {valor_total:.2f}", font="Helvetica 13")
-            lb_valores.grid(row=idx, column=1, columnspan=2, padx=(0,10), pady=5, sticky="nw")
+            lb_valores = Label(frame_rigth, text=f"{self.descricao}\tR$ {self.valor_total:.2f}", font="Helvetica 13",
+                               background="#fff")
+            lb_valores.grid(row=idx, column=1, columnspan=2, padx=(0, 10), pady=5, sticky="nw")
+
+            # Separador
+            # separator = ttk.Separator(self.frame_rigth, orient="horizontal")
+            # separator.grid(row=idx + 2, column=0, columnspan=4, sticky="ew", padx=10, pady=5)
 
         # Adicionar a linha de separação below the last product entry
         linha_separacao = Frame(frame_rigth, bg="black", height=2)
         linha_separacao.grid(row=len(produtos_selecionados) + 1, column=0, columnspan=4, sticky="new", pady=5)
 
         # Adicionar o campo de pagamento efetuado com o valor total somado
-        lb_pagamento_efetuado = Label(frame_rigth, text=f"PAGAMENTO EFETUADO", background="#fff", fg="black", anchor="w" ,font="Helvetica 18")
-        lb_pagamento_efetuado.grid(row=len(produtos_selecionados) + 2, column=0, padx=10, pady=5, sticky="nw")
+        lb_pagamento_efetuado = Label(frame_rigth, text=f"PAGAMENTO EFETUADO", background="#fff", fg="black",
+                                      anchor="w", font="Helvetica 18")
+        lb_pagamento_efetuado.grid(row=len(produtos_selecionados) + 2, column=0, columnspan=2, padx=10, pady=5,
+                                   sticky="nw")
 
-        self.tipo_pagamento = StringVar()
-        lb_tipo_pagamento = Label(frame_rigth, textvariable=self.tipo_pagamento, background="#fff", fg="black", anchor="w", font="Helvetica 18")
-        lb_tipo_pagamento.grid(row=len(produtos_selecionados) + 3, column=0,  padx=10, pady=5, sticky="nw")
+        self.lb_tipo_pagamento = StringVar()
+        lb_tipo = Label(frame_rigth, textvariable=self.lb_tipo_pagamento, background="#fff", fg="black", anchor="w",
+                        font="Helvetica 18")
+        lb_tipo.grid(row=len(produtos_selecionados) + 3, column=0, columnspan=2, padx=10, pady=5, sticky="nw")
 
-        lb_pagamento_efetuado = Label(frame_rigth, text="À VISTA", background="#fff", fg="black", anchor="w", font="Helvetica 18")
-        lb_pagamento_efetuado.grid(row=len(produtos_selecionados) + 2, column=1,  padx=10, pady=5, sticky="ne")
+        lb_avista = Label(frame_rigth, text=f"À VISTA", background="#fff", fg="black", anchor="w", font="Helvetica 18")
+        lb_avista.grid(row=len(produtos_selecionados) + 2, column=1, columnspan=2, padx=10, pady=5, sticky="ne")
 
-        lb_total_somado = Label(frame_rigth, text=f"R$ {valor_total_somado:.2f}", background="#fff", fg="black", anchor="w", font="Helvetica 18")
-        lb_total_somado.grid(row=len(produtos_selecionados) + 3, column=1, padx=10, pady=5, sticky="ne")
+        lb_total_somado = Label(frame_rigth, text=f"R$ {valor_total_somado:.2f}", background="#fff", fg="black",
+                                anchor="w", font="Helvetica 18")
+        lb_total_somado.grid(row=len(produtos_selecionados) + 3, column=1, columnspan=2, padx=10, pady=5, sticky="ne")
 
-        # Restante do código para exibir os outros campos, como valor a pagar, botões de pagamento, etc.
+        # Criar o botão "Finalizar venda" ALTERADO NO BOURBON
+        self.img_finalizar = PhotoImage(file="img\icons\seta-direita-50x50.png")
+        self.botao_finalizar = Button(frame_btn_finalizar, image=self.img_finalizar, compound="left", text="FINALIZAR VENDA", height=50, background="#1a6278", fg="#fff" ,font="Helvetica 15", cursor="hand2", command=self.finalizar_venda_armazenar_relatorio)
+        self.botao_finalizar.grid(row=0, column=0, columnspan=2, padx=10, pady=10, sticky="sew")
+
+        # Configurar o frame_btn_finalizar para expandir na horizontal e vertical
+        frame_btn_finalizar.columnconfigure(0, weight=1)
+        frame_btn_finalizar.rowconfigure(0, weight=1)
 
         # Configurar um Scrollbar caso a lista de produtos seja longa
-        scrollbar = tk.Scrollbar(self.top_pagamento, orient="VERTICAL", command=frame_rigth)
-        scrollbar.grid(row=0, column=1, sticky="ns")
-        frame_rigth.configure(yscrollcommand=scrollbar.set)
+        # scrollbar = Scrollbar(self.top_pagamento, orient="vertical", command=frame_rigth)
+        # scrollbar.grid(row=0, column=4, sticky="ns")
+        # frame_rigth.configure(yscrollcommand=scrollbar.set)
 
         # Centralizar a janela no centro da tela
         self.centralizar_janela(self.top_pagamento)
 
-        # Separador
-       # separator = ttk.Separator(self.frame_rigth, orient="horizontal")
-      #  separator.grid(row=row + 1, column=0, columnspan=4, sticky="ew", padx=10, pady=5)
+    def selecionar_pagamento_dinheiro(self):
+        self.lb_tipo_pagamento.set("DINHEIRO")
 
+    def selecionar_pagamento_cartao_credito(self):
+        self.lb_tipo_pagamento.set("CARTÃO DE CRÉDITO")
 
-        #valor_pago =  simpledialog.askfloat("Pagamento em Dinheiro", f"Total da Compra: R$ {total_compra:.2f}\nDigite o valor pago em dinheiro:")
+    def selecionar_pagamento_cartao_debito(self):
+        self.lb_tipo_pagamento.set("CARTÃO DE DÉBITO")
 
-       # if valor_pago is not None:
-      #  troco = valor_pago - total_compra
-       #     messagebox.showinfo("Troco", f"Troco: R$ {troco:.2f}")
+    def selecionar_pagamento_pix(self):
+        self.lb_tipo_pagamento.set("PIX")
 
-           # for nome_produto, quantidade_vendida in produtos_quantidades:
-            #    self.registrar_pagamento_no_relatorio(data_hora_atual, nome_produto, total_compra, quantidade_vendida, "Dinheiro", valor_pago, troco)
-           # self.limpar_tela_apos_pagamento()
+    def get_valor_pago_somar_troco(self):
+        try:
+            self.valor_pago = float(self.enty_valor_pago.get())
+            self.troco_lb = self.valor_pago - self.total_compra
+            self.troco.set(f"TROCO\n{self.troco_lb:.2f}")
+            self.enty_valor_pago.delete(0, "end")
+        except ValueError:
+            # Caso o valor digitado no Entry não seja um número válido
+            self.troco.set("Valor inválido")
 
-            # Conectar ao banco de dados
-           # conn = sqlite3.connect("SistemaPDV.db")
-           # cursor = conn.cursor()
-
-            # Atualizar o estoque para cada produto vendido
-            #for produto, quantidade_vendida in produtos_quantidades:
-                # Verificar a quantidade atual no estoque
-             #   cursor.execute("SELECT estoque FROM produtos WHERE descricao = ?", (produto,))
-              #  resultado = cursor.fetchone()
-
-               # if resultado is not None:
-                #    quantidade_atual = resultado[0]
-                 #   nova_quantidade = quantidade_atual - quantidade_vendida
-
-                    # Atualizar o estoque no banco de dados
-                  #  cursor.execute("UPDATE produtos SET estoque = ? WHERE descricao = ?", (nova_quantidade, produto))
-            # Salvar as alterações e fechar a conexão com o banco de dados
-            #conn.commit()
-           # conn.close()
-        #else:
-         #   messagebox.showinfo("Cancelado", f"Total da Compra: R$ {total_compra:.2f} com dinheiro cancelado")
-          #  self.limpar_tela_apos_pagamento()
-
-    def selecionado_dinheiro(self):
-        self.tipo_pagamento.set("DINHEIRO")
-
-    def selecionado_cartao_credito(self):
-        self.tipo_pagamento.set("CARTÃO DE CRÉDITO")
-
-    def selecionado_cartao_debito(self):
-        self.tipo_pagamento.set("CARTÃO DE DÉBITO")
-
-    def selecionar_pix(self):
-        self.tipo_pagamento.set("PIX")
-
-    def realizar_pagamento_cartao(self):
-        total_compra, produtos_quantidades = self.tela_usuario.calcular_total_compra()
+    def finalizar_venda_armazenar_relatorio(self):
+        # Obter os dados da venda
         data_hora_atual = datetime.now()
-        confirmar_pag = messagebox.askyesno("Pagamento com Cartão",
-                                            f"Pagamento de R$ {total_compra:.2f} feito com cartão.")
+        forma_pagamento = self.lb_tipo_pagamento.get().title()
 
-        if confirmar_pag:
-            for nome_produto, quantidade_vendida in produtos_quantidades:
-                self.registrar_pagamento_no_relatorio(data_hora_atual, nome_produto, total_compra, quantidade_vendida,
-                                                      "Cartão", total_compra, 0)
-            self.limpar_tela_apos_pagamento()
+        # Verificar se a forma de pagamento é em dinheiro
+        if forma_pagamento.lower() == "dinheiro":
+            try:
+                valor_pago_formatado = float(self.valor_pago)  # Converter a string em float
+            except ValueError:
+                messagebox.showerror("Erro", "Valor pago inválido. Certifique-se de digitar um número válido.")
+                return
 
-            # Conectar ao banco de dados
-            conn = sqlite3.connect("SistemaPDV.db")
-            cursor = conn.cursor()
-
-            # Atualizar o estoque para cada produto vendido
-            for produto, quantidade_vendida in produtos_quantidades:
-                # Verificar a quantidade atual no estoque
-                cursor.execute("SELECT estoque FROM produtos WHERE descricao = ?", (produto,))
-                resultado = cursor.fetchone()
-
-                if resultado is not None:
-                    quantidade_atual = resultado[0]
-                    nova_quantidade = quantidade_atual - quantidade_vendida
-
-                    # Atualizar o estoque no banco de dados
-                    cursor.execute("UPDATE produtos SET estoque = ? WHERE descricao = ?", (nova_quantidade, produto))
-            # Salvar as alterações e fechar a conexão com o banco de dados
-            conn.commit()
-            conn.close()
-
+            # Calcular o troco apenas se a forma de pagamento for dinheiro
+            total_compra = self.total_compra
+            troco = valor_pago_formatado - total_compra
+            troco_formatado = f"{troco:.2f}"
         else:
-            messagebox.showinfo("Cancelado", f"Pagamento de R$ {total_compra:.2f} com cartão cancelado.")
-            self.limpar_tela_apos_pagamento()
+            # Caso contrário, a forma de pagamento não é dinheiro, então o troco é zero
+            troco_formatado = "0.00"
+            valor_pago = self.total_compra
+            valor_pago_formatado = f"{valor_pago:.2f}"
 
-    def realizar_pagamento_pix(self):
-        total_compra, produtos_quantidades = self.tela_usuario.calcular_total_compra()
-        data_hora_atual = datetime.now()
-        confirmar_pag = messagebox.askyesno("Pagamento com PIX", f"Pagamento de R$ {total_compra:.2f} feito com PIX.")
-
-        if confirmar_pag:
-            for nome_produto, quantidade_vendida in produtos_quantidades:
-                self.registrar_pagamento_no_relatorio(data_hora_atual, nome_produto, total_compra, quantidade_vendida,
-                                                      "PIX", total_compra, 0)
-            self.limpar_tela_apos_pagamento()
-
-            # Conectar ao banco de dados
-            conn = sqlite3.connect("SistemaPDV.db")
-            cursor = conn.cursor()
-
-            # Atualizar o estoque para cada produto vendido
-            for produto, quantidade_vendida in produtos_quantidades:
-                # Verificar a quantidade atual no estoque
-                cursor.execute("SELECT estoque FROM produtos WHERE descricao = ?", (produto,))
-                resultado = cursor.fetchone()
-
-                if resultado is not None:
-                    quantidade_atual = resultado[0]
-                    nova_quantidade = quantidade_atual - quantidade_vendida
-
-                    # Atualizar o estoque no banco de dados
-                    cursor.execute("UPDATE produtos SET estoque = ? WHERE descricao = ?", (nova_quantidade, produto))
-            # Salvar as alterações e fechar a conexão com o banco de dados
-            conn.commit()
-            conn.close()
-
-        else:
-            messagebox.showinfo("Cancelado", f"Pagamento de R$ {total_compra:.2f} com PIX cancelado.")
-            self.limpar_tela_apos_pagamento()
-
-    def registrar_pagamento_no_relatorio(self, data_hora_atual, nome_produto, total_compra, quantidade_vendida,
-                                         forma_pagamento, valor_pago, troco):
-        # Implementar a lógica para registrar o pagamento no relatório ou banco de dados
-        # Obter a data e hora atual do sistema
-        data_hora_atual = datetime.now()
         # Conectar ao banco de dados
-        conn = sqlite3.connect("SistemaPDV.db")
-        cursor = conn.cursor()
-        # Inserir os dados na tabela "relatorios_vendas"
-        cursor.execute('''
-            INSERT INTO relatorios_vendas (data, nome_produto ,total_compra, quantidade_vendida ,forma_pagamento, valor_pago, troco)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (data_hora_atual, nome_produto, total_compra, quantidade_vendida, forma_pagamento, valor_pago, troco))
-        # Salvar as alterações e fechar a conexão com o banco de dados
-        conn.commit()
-        conn.close()
+        with sqlite3.connect('SistemaPDV.db') as conexao:
+            cursor = conexao.cursor()
+
+            # Inserir os dados da venda na tabela relatorio_vendas
+            for produto in self.produtos_quantidades:
+                codigo, descricao, quantidade_vendida, valor_unitario, valor_total = produto
+                cursor.execute('''
+                    INSERT INTO relatorios_vendas (data, nome_produto, total_compra, quantidade_vendida, forma_pagamento, valor_pago, troco)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)''', (
+                data_hora_atual, descricao, valor_total, quantidade_vendida, forma_pagamento, valor_pago_formatado,
+                troco_formatado))
+
+                # Atualizar o estoque para cada produto vendido
+                cursor.execute("SELECT estoque FROM produtos WHERE descricao = ?", (descricao,))
+                resultado = cursor.fetchone()
+
+                if resultado is not None:
+                    quantidade_atual = int(resultado[0])
+                    quantidades_vendida = float(quantidade_vendida)
+                    nova_quantidade = quantidade_atual - quantidades_vendida
+
+                    # Atualizar o estoque no banco de dados
+                    cursor.execute("UPDATE produtos SET estoque = ? WHERE descricao = ?", (nova_quantidade, descricao))
+
+        # Salvar as alterações e fechar a conexão
+        conexao.commit()
+        conexao.close()
+
+        # Exibir mensagem de venda finalizada
+        messagebox.showinfo("Venda Finalizada", "A venda foi finalizada com sucesso!")
+        self.limpar_tela_apos_pagamento()
+        # Fechar a janela de pagamento
+        self.top_pagamento.destroy()
 
     def limpar_tela_apos_pagamento(self):
         # Implementar a lógica para limpar a tela após o pagamento
@@ -492,6 +467,8 @@ class TeclasDeAtalho:
     def relatorio_venda(self):
         self.janela_relatorio = tk.Toplevel()
         self.janela_relatorio.title("Relatório de Vendas")
+        self.frame_despesas = ""
+        self.frame_receitas = ""
 
         # Defina o tamanho da janela para preencher toda a tela
         largura_tela = self.janela_relatorio.winfo_screenwidth()
@@ -519,9 +496,7 @@ class TeclasDeAtalho:
         self.frame_treeview.grid(row=1, column=0, columnspan=4, padx=10, pady=10, sticky="nsew")
 
         # Adicione os botões de filtro dentro do frame_left
-        btn_filtro_dia = ctk.CTkButton(frame_left, text="Vendas do Dia", height=45, hover_color="blue",
-                                       font=ctk.CTkFont(family="Roboto", size=20), text_color="white",
-                                       bg_color="#252525", corner_radius=None, command=self.filtrar_vendas_dia)
+        btn_filtro_dia = ctk.CTkButton(frame_left, text="Vendas do Dia", height=45, hover_color="blue",   font=ctk.CTkFont(family="Roboto", size=20), text_color="white", bg_color="#252525", corner_radius=None, command=self.filtrar_vendas_dia)
         btn_filtro_semana = ctk.CTkButton(frame_left, text="Vendas da Semana", height=45, hover_color="blue",
                                           font=ctk.CTkFont(family="Roboto", size=20), text_color="white",
                                           bg_color="#252525", corner_radius=None, command=self.filtrar_vendas_semana)
@@ -531,6 +506,10 @@ class TeclasDeAtalho:
         btn_mostrar_todos = ctk.CTkButton(frame_left, text="Mostrar Todos", height=45, hover_color="blue",
                                           font=ctk.CTkFont(family="Roboto", size=20), text_color="white",
                                           bg_color="#252525", corner_radius=None, command=self.filtrar_todos_os_dados)
+        btn_graficos = ctk.CTkButton(frame_left, text="Gráficos vendas", height=45, hover_color="blue",
+                                           font=ctk.CTkFont(family="Roboto", size=20), text_color="white",
+                                           bg_color="#252525", corner_radius=None, command=self.chamar_class_grafico)
+
         btn_sair_relatorio = ctk.CTkButton(frame_left, text="Sair", height=45, hover_color="blue",
                                            font=ctk.CTkFont(family="Roboto", size=20), text_color="white",
                                            bg_color="#252525", corner_radius=None, command=self.sair_tela_relatorio)
@@ -539,12 +518,21 @@ class TeclasDeAtalho:
         btn_filtro_semana.grid(row=1, padx=1, pady=5, sticky="ew")
         btn_filtro_mes.grid(row=2, padx=1, pady=5, sticky="ew")
         btn_mostrar_todos.grid(row=3, padx=1, pady=5, sticky="ew")
-        btn_sair_relatorio.grid(row=4, padx=1, pady=5, sticky="ew")
+        btn_graficos.grid(row=4, padx=1, pady=5, sticky="ew")
+        btn_sair_relatorio.grid(row=5, padx=1, pady=5, sticky="ew")
         # Adicione um Label vazio para preencher toda a altura do frame
         empty_label = tk.Label(frame_left, bg="#202123")
-        empty_label.grid(row=5, column=0, sticky="ns")
+        empty_label.grid(row=6, column=0, sticky="ns")
 
     def criar_frame_filtros(self):
+        # Show the frame again
+        self.frame_right.grid()
+        if self.frame_despesas and self.frame_receitas:
+            self.frame_despesas.grid_remove()
+            self.frame_receitas.grid_remove()
+        else:
+            pass
+
         # Limpa o frame de filtros, se já existir
         if self.frame_filtros is not None:
             self.frame_filtros.destroy()
@@ -554,10 +542,17 @@ class TeclasDeAtalho:
         self.frame_filtros.grid(row=0, column=0, columnspan=4, padx=10, pady=10, sticky="ew")
 
     def criar_treeview(self):
+        # Show the frame again
+        self.frame_right.grid()
+        if self.frame_despesas and self.frame_receitas:
+            self.frame_despesas.grid_remove()
+            self.frame_receitas.grid_remove()
+        else:
+            pass
         # Cria uma única instância da treeview apenas se ela ainda não foi criada
         if self.treeview_relatorio is None:
             self.treeview_relatorio = ttk.Treeview(self.frame_treeview, height=20, columns=(
-            "data", "nome_produto", "total_compra", "quantidade_vendida", "forma_pagamento", "valor_pago", "troco"))
+                "data", "nome_produto", "total_compra", "quantidade_vendida", "forma_pagamento", "valor_pago", "troco"))
             self.treeview_relatorio.heading("data", text="Data")
             self.treeview_relatorio.heading("nome_produto", text="Descrição")
             self.treeview_relatorio.heading("total_compra", text="Total da Compra")
@@ -920,3 +915,9 @@ class TeclasDeAtalho:
         self.title_text = "Relatório de todas as vendas"
         self.gerar_pdf(self.treeview_relatorio)
         self.criar_treeview()
+    def chamar_class_grafico(self):
+        from frames_relatorios import GraphApp
+        # Crie uma instância da classe GraphApp
+        graph_window = tk.Toplevel(self.root)
+        graph_app = GraphApp(graph_window)
+

@@ -39,11 +39,11 @@ class ApplicationLogin:
             ipi REAL,
             lucro REAL,
             preco_venda REAL NOT NULL,
-            qtde_minima INTEGER,
+            qtde_minima REAL,
             caminho_imagem TEXT,
             marca TEXT,
             fornecedor TEXT,
-            estoque INTEGER NOT NULL)
+            estoque REAL NOT NULL)
         """)
         # Criar a tabela "relatorios_vendas"
         self.cursor.execute("""
@@ -52,7 +52,7 @@ class ApplicationLogin:
                 data TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 nome_produto TEXT,
                 total_compra REAL,
-                quantidade_vendida INTEGER,
+                quantidade_vendida REAL,
                 forma_pagamento TEXT,
                 valor_pago REAL,
                 troco REAL)
@@ -77,12 +77,12 @@ class ApplicationLogin:
     def Tela(self):
         self.janela.geometry("700x400+500+200")
         self.janela.title("Area de login")
-        self.janela.iconbitmap("img/icons/caixa-icone.ico")
+        self.janela.iconbitmap("img/icons/Logo-caixa.ico")
         self.janela.resizable(False, False)
 
     # CAMPO DE LOGIN
     def Tela_Login(self):
-        self.img = PhotoImage(file="img/icons/caixa-376.png")
+        self.img = PhotoImage(file="img/icons/Logo-login.png")
         self.label_img = Label(master=self.janela, image=self.img, background="#252525")
         self.label_img.place(x=5, y=50)
 

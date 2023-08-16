@@ -15,7 +15,7 @@ class TelaUsuario:
         self.janela_pdv = Toplevel(janela_principal)
         self.janela_pdv.geometry("{}x{}+0+0".format(self.janela_pdv.winfo_screenwidth(), self.janela_pdv.winfo_screenheight()))
         self.janela_pdv.title("Sistema de caixa")
-        self.janela_pdv.iconbitmap("img/icons/caixa-icone.ico")
+        self.janela_pdv.iconbitmap("img/icons/Logo-caixa.ico")
         self.janela_pdv.resizable(False, False)
         self.Criar_Interface()
         self.Treeview()
@@ -43,8 +43,8 @@ class TelaUsuario:
         self.quantidade_total = 0
         self.valor_Total = 0
         self.descricao_produto = ""
-        self.cam_imagem = None  
-        self.label_imagem_prod = None 
+        self.cam_imagem = None
+        self.label_imagem_prod = None
 
         # Frame principal
         self.frame_principal = Frame(self.janela_pdv)
@@ -86,7 +86,7 @@ class TelaUsuario:
         self.treeview_produtos.column("quantidade", width=100, anchor="center", stretch=False)
         self.treeview_produtos.column("vlr_unitario", width=100, anchor="center", stretch=False)
         self.treeview_produtos.column("vlr_total", width=160, anchor="center", stretch=False)
-        
+
         self.treeview_produtos.pack(fill="both", padx=2, pady=1, expand=True)
 
     def Label_frame_esquerdo(self):
@@ -105,27 +105,21 @@ class TelaUsuario:
         label_pesquisar = Label(label_frame, text="[ F1 ] Pesquisar produto", font="Roboto 14", anchor="w")
         label_pesquisar.grid(row=0, column=0, sticky="w", padx=20)
 
-        label_dinheiro = Label(label_frame, text="[ F2 ] Dinheiro", font="Roboto 14", anchor="w")
+        label_dinheiro = Label(label_frame, text="[ F2 ] Pagamento", font="Roboto 14", anchor="w")
         label_dinheiro.grid(row=1, column=0, sticky="w", padx=20)
 
-        label_cartao = Label(label_frame, text="[ F3 ] Cartão", font="Roboto 14", anchor="w")
-        label_cartao.grid(row=2, column=0, sticky="w", padx=20)
-
-        label_pix = Label(label_frame, text="[ F4 ] PIX", font="Roboto 14", anchor="w")
-        label_pix.grid(row=3, column=0, sticky="w", padx=20)
-
         label_cancelar_produto = Label(label_frame, text="[ DEL ] Cancelar produto", font="Roboto 14", anchor="w")
-        label_cancelar_produto.grid(row=0, column=1, sticky="w", padx=20)
+        label_cancelar_produto.grid(row=2, column=0, sticky="w", padx=20)
 
         label_cadastrar_produto = Label(label_frame, text="[ F5 ] Cadastrar produto", font="Roboto 14", anchor="w")
-        label_cadastrar_produto.grid(row=1, column=1, sticky="w", padx=20)
+        label_cadastrar_produto.grid(row=0, column=1, sticky="w", padx=20)
 
         label_confirmar_produto = Label(label_frame, text="[ F6 ] Relatório de vendas", font="Roboto 14", anchor="w")
-        label_confirmar_produto.grid(row=2, column=1, sticky="w", padx=20)
+        label_confirmar_produto.grid(row=1, column=1, sticky="w", padx=20)
 
         label_esc_sair = Label(label_frame, text="[ ESC ] Fechar sistema", font="Roboto 14", anchor="w")
-        label_esc_sair.grid(row=3, column=1, sticky="w", padx=20)
-        #label_frame.grid_columnconfigure(1, weight=1)    
+        label_esc_sair.grid(row=2, column=1, sticky="w", padx=20)
+        #label_frame.grid_columnconfigure(1, weight=1)
 
     def atualizar_hora(self):
         # Obter a data e hora atual
@@ -168,48 +162,52 @@ class TelaUsuario:
         # Adiciona os eventos de binding ao campo "Código do Produto"
         self.entry_codigo.bind('<Return>', self.on_enter)
 
-    def atualizar_treeview(self,codigo_produto):
+    def atualizar_treeview(self, codigo_produto):
         # Verifica se o código do produto está no formato correto
-        if re.match(r'^\d+x\d+$', codigo_produto):
+        if re.match(r'^\d+(\.\d+)?x\d+$', codigo_produto):
             # Separa a quantidade e o código do produto
-            quantidade, codigo = codigo_produto.split('x')
-            
+            quantidade_str, codigo = codigo_produto.split('x')
+
+            # Converte a quantidade para um número de ponto flutuante
+            quantidade = float(quantidade_str.replace(',', '.'))  # Garante que a vírgula seja considerada como separador decimal
+
             # Acessando o banco de dados para obter as informações do produto
             self.conn = sqlite3.connect("SistemaPDV.db")
             self.cursor = self.conn.cursor()
-            self.cursor.execute("SELECT descricao, preco_venda, caminho_imagem FROM produtos WHERE codigo_interno = ?", (codigo,))
+            self.cursor.execute("SELECT descricao, preco_venda, caminho_imagem FROM produtos WHERE codigo_interno = ?",
+                                (codigo,))
             result = self.cursor.fetchone()
-            
+
             if result:
                 self.descricao = result[0]
                 valor_unitario = result[1]
                 self.cam_imagem = result[2]
-                
+
                 # Calcula o valor total
-                self.quantidade = int(quantidade)
-                self.valor_total = self.quantidade * valor_unitario
+                self.valor_total = quantidade * valor_unitario
 
                 # Adiciona os valores às quantidades e valores totais acumulados
-                self.quantidade_total += self.quantidade
+                self.quantidade_total += quantidade
                 self.valor_Total += self.valor_total
                 self.label_descricao_produto["text"] = ""
                 self.descricao_produto = self.descricao
-                
+
                 # Atualiza a Treeview com as informações do produto
-                self.treeview_produtos.insert("", "end", values=(codigo, self.descricao, self.quantidade, valor_unitario, self.valor_total))
+                self.treeview_produtos.insert("", "end", values=(
+                codigo, self.descricao, quantidade, valor_unitario, self.valor_total))
 
                 # Atualiza a imagem
                 self.atualizar_imagem()
-                
+
                 # Limpa o campo "Código do Produto"
                 self.entry_codigo.delete(0, "end")
 
                 # Atualiza as labels com os resultados acumulados
                 self.atualizar_labels()
-        
+
         else:
             pass
-    
+
     def atualizar_labels(self):
         self.label_total_itens["text"] = f"TOTAL ITENS: {self.quantidade_total}"
         self.label_total_compra["text"] = f"TOT. COMPRA: R${self.valor_Total:.2f}"
@@ -406,7 +404,7 @@ class TelaUsuario:
         # Ajuda Nome do produto
         lb_ajuda_imagem = Label(self.label_frame_ajuda, text="O Nome do produto é obrigatório.", anchor="w", padx=2, pady=2)
         lb_ajuda_imagem.grid(row=2, column=0)
-    
+
     def Receber_variaveis_produtos(self):
         self.cod_produto = self.enty_cod_interno.get()
         self.data_atualizacao = self.enty_data_atualizacao.get()
