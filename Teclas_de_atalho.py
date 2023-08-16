@@ -202,6 +202,7 @@ class TeclasDeAtalho:
         # Criar o TopLevel usando a instância da janela principal
         self.top_pagamento = Toplevel(self.janela)
         self.top_pagamento.title("Pagamentos")
+        self.top_pagamento.iconbitmap("img/icons/Logo-caixa.ico")
         self.top_pagamento.config(background="#fff")
 
         # Adicionar um frame ao TopLevel para conter os campos desejados
@@ -394,6 +395,8 @@ class TeclasDeAtalho:
     def finalizar_venda_armazenar_relatorio(self):
         # Obter os dados da venda
         data_hora_atual = datetime.now()
+        # Formatar a hora no formato brasileiro (hh:mm:ss)
+        self.hora_formatada = data_hora_atual.strftime("%d/%m/%Y %H:%M:%S")
         forma_pagamento = self.lb_tipo_pagamento.get().title()
 
         # Verificar se a forma de pagamento é em dinheiro
@@ -424,7 +427,7 @@ class TeclasDeAtalho:
                 cursor.execute('''
                     INSERT INTO relatorios_vendas (data, nome_produto, total_compra, quantidade_vendida, forma_pagamento, valor_pago, troco)
                     VALUES (?, ?, ?, ?, ?, ?, ?)''', (
-                data_hora_atual, descricao, valor_total, quantidade_vendida, forma_pagamento, valor_pago_formatado,
+                self.hora_formatada, descricao, valor_total, quantidade_vendida, forma_pagamento, valor_pago_formatado,
                 troco_formatado))
 
                 # Atualizar o estoque para cada produto vendido
@@ -496,33 +499,39 @@ class TeclasDeAtalho:
         self.frame_treeview.grid(row=1, column=0, columnspan=4, padx=10, pady=10, sticky="nsew")
 
         # Adicione os botões de filtro dentro do frame_left
-        btn_filtro_dia = ctk.CTkButton(frame_left, text="Vendas do Dia", height=45, hover_color="blue",   font=ctk.CTkFont(family="Roboto", size=20), text_color="white", bg_color="#252525", corner_radius=None, command=self.filtrar_vendas_dia)
-        btn_filtro_semana = ctk.CTkButton(frame_left, text="Vendas da Semana", height=45, hover_color="blue",
-                                          font=ctk.CTkFont(family="Roboto", size=20), text_color="white",
-                                          bg_color="#252525", corner_radius=None, command=self.filtrar_vendas_semana)
-        btn_filtro_mes = ctk.CTkButton(frame_left, text="Vendas do Mês", height=45, hover_color="blue",
+        self.imagem_dia = PhotoImage(file="img/icons/icone-do-calendario-de-1-dia.png").subsample(1, 1)
+        btn_filtro_dia = ctk.CTkButton(frame_left, text="Vendas do Dia", image=self.imagem_dia, compound="left", height=45,
+                                       hover_color="blue",
                                        font=ctk.CTkFont(family="Roboto", size=20), text_color="white",
-                                       bg_color="#252525", corner_radius=None, command=self.filtrar_vendas_mes)
-        btn_mostrar_todos = ctk.CTkButton(frame_left, text="Mostrar Todos", height=45, hover_color="blue",
-                                          font=ctk.CTkFont(family="Roboto", size=20), text_color="white",
-                                          bg_color="#252525", corner_radius=None, command=self.filtrar_todos_os_dados)
-        btn_graficos = ctk.CTkButton(frame_left, text="Gráficos vendas", height=45, hover_color="blue",
-                                           font=ctk.CTkFont(family="Roboto", size=20), text_color="white",
-                                           bg_color="#252525", corner_radius=None, command=self.chamar_class_grafico)
+                                       fg_color="#267cb5", corner_radius=None, command=self.filtrar_vendas_dia)
 
-        btn_sair_relatorio = ctk.CTkButton(frame_left, text="Sair", height=45, hover_color="blue",
+        self.imagem_semana = PhotoImage(file="img/icons/icone-do-calendario-do-7-dia.png").subsample(1,1)
+        btn_filtro_semana = ctk.CTkButton(frame_left, text="Venda Semana", image=self.imagem_semana, compound="left", height=45, hover_color="blue",
+                                          font=ctk.CTkFont(family="Roboto", size=20), text_color="white",
+                                          fg_color="#267cb5", corner_radius=None, command=self.filtrar_vendas_semana)
+
+        self.imagem_mes = PhotoImage(file="img/icons/icone-do-calendario-de-30-dias.png").subsample(1,1)
+        btn_filtro_mes = ctk.CTkButton(frame_left, text="Venda do Mês", image=self.imagem_mes, compound="left" ,height=45, hover_color="blue",
+                                       font=ctk.CTkFont(family="Roboto", size=20), text_color="white",
+                                       fg_color="#267cb5", corner_radius=None, command=self.filtrar_vendas_mes)
+
+        self.imagem_todos = PhotoImage(file="img/icons/icone-do-calendario-de-todospng.png").subsample(1,1)
+        btn_mostrar_todos = ctk.CTkButton(frame_left, text="Todas Vendas", image=self.imagem_todos, compound="left" ,height=45, hover_color="blue",
+                                          font=ctk.CTkFont(family="Roboto", size=20), text_color="white",
+                                          fg_color="#267cb5", corner_radius=None, command=self.filtrar_todos_os_dados)
+        self.imagem_sair = PhotoImage(file="img/icons/icone-sair-50x50.png").subsample(1,1)
+        btn_sair_relatorio = ctk.CTkButton(frame_left, text="Sair", image=self.imagem_sair, compound="left" ,height=45, hover_color="blue",
                                            font=ctk.CTkFont(family="Roboto", size=20), text_color="white",
-                                           bg_color="#252525", corner_radius=None, command=self.sair_tela_relatorio)
+                                           fg_color="#267cb5", corner_radius=None, command=self.sair_tela_relatorio)
 
         btn_filtro_dia.grid(row=0, padx=1, pady=5, sticky="ew")
         btn_filtro_semana.grid(row=1, padx=1, pady=5, sticky="ew")
         btn_filtro_mes.grid(row=2, padx=1, pady=5, sticky="ew")
         btn_mostrar_todos.grid(row=3, padx=1, pady=5, sticky="ew")
-        btn_graficos.grid(row=4, padx=1, pady=5, sticky="ew")
-        btn_sair_relatorio.grid(row=5, padx=1, pady=5, sticky="ew")
+        btn_sair_relatorio.grid(row=4, padx=1, pady=5, sticky="ew")
         # Adicione um Label vazio para preencher toda a altura do frame
         empty_label = tk.Label(frame_left, bg="#202123")
-        empty_label.grid(row=6, column=0, sticky="ns")
+        empty_label.grid(row=5, column=0, sticky="ns")
 
     def criar_frame_filtros(self):
         # Show the frame again
@@ -915,9 +924,3 @@ class TeclasDeAtalho:
         self.title_text = "Relatório de todas as vendas"
         self.gerar_pdf(self.treeview_relatorio)
         self.criar_treeview()
-    def chamar_class_grafico(self):
-        from frames_relatorios import GraphApp
-        # Crie uma instância da classe GraphApp
-        graph_window = tk.Toplevel(self.root)
-        graph_app = GraphApp(graph_window)
-

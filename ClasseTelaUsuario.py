@@ -193,8 +193,10 @@ class TelaUsuario:
                 self.descricao_produto = self.descricao
 
                 # Atualiza a Treeview com as informações do produto
-                self.treeview_produtos.insert("", "end", values=(
-                codigo, self.descricao, quantidade, valor_unitario, self.valor_total))
+                self.treeview_produtos.insert("", "end", values=(codigo, self.descricao,
+                                                                 f"{quantidade:.2f}",
+                                                                 f"{valor_unitario:.2f}",
+                                                                 f"{self.valor_total:.2f}"))
 
                 # Atualiza a imagem
                 self.atualizar_imagem()
@@ -209,7 +211,7 @@ class TelaUsuario:
             pass
 
     def atualizar_labels(self):
-        self.label_total_itens["text"] = f"TOTAL ITENS: {self.quantidade_total}"
+        self.label_total_itens["text"] = f"TOTAL ITENS: {self.quantidade_total:.2f}"
         self.label_total_compra["text"] = f"TOT. COMPRA: R${self.valor_Total:.2f}"
         self.label_descricao_produto["text"] = f"{self.descricao_produto}"
 
